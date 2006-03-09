@@ -123,11 +123,7 @@ implements
 		  userQuit = true;
 	      try {
 	        p2 = runEnviron.exec("killall -9 multiburn");
-	        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	        // !!!!!!!!!!!! ANPASSEN WENN ES NICHT ZUTRIFFT: !!!!!!!!!!!!!!!!!!!!!!
-	        // !!!!!!!!!!!!!!! (AUCH IN multiburn-sermon) !!!!!!!!!!!!!!!!!!!!!!!!!
-	        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	        p3 = runEnviron.exec("rm -rf /daten/temp/.multiburn");
+	        p3 = runEnviron.exec("rm -rf " + DB.getTempDir() + ".multiburn");
 	      }
 	      catch (IOException i8) {
 	        javax.swing.JOptionPane.showMessageDialog(this, "Could not kill multiburn\nPlease run 'killall -3 multiburn'", "Error", 0);

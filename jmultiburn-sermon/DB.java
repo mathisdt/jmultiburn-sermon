@@ -45,4 +45,8 @@ public class DB {
 	public static String getSermonsDir() {
 		return getInstance().getString("sermonsdir");
 	}
+	
+	public static String getTempDir() {
+		return getInstance().getString("tempdir");
+	}
 }
