@@ -64,7 +64,7 @@ implements
     i9 = f8.getSize();
     burnDisplay.setFont(new java.awt.Font("Monospaced", 0, i9));
     burnDisplay.setEditable(false);
-    j10 = new javax.swing.JButton("Schließen");
+    j10 = new javax.swing.JButton("Schlieï¿½en");
     j10.setActionCommand("quit");
     j10.addActionListener(this);
     j11 = new javax.swing.JLabel("Meldungen:");
@@ -90,12 +90,12 @@ implements
     runMultiburn(s12);
   }
 
+  private Process multiburnProcess;
   private void runMultiburn(String[] s1) {
-    Process p2;
     runEnviron = Runtime.getRuntime();
     try {
-      p2 = runEnviron.exec(s1);
-      new BurnMonitor(burnDisplay, burnDispScrl, p2);
+      multiburnProcess = runEnviron.exec(s1);
+      new BurnMonitor(burnDisplay, burnDispScrl, multiburnProcess);
       setVisible(true);
     }
     catch (IOException i1) {
@@ -116,17 +116,18 @@ implements
   
   protected void exit() {
 	  Object[] options = {"Ja, wirklich!", "Nein, lieber doch nicht..."};
-	  int answer = javax.swing.JOptionPane.showOptionDialog(this, "Wirklich das Brenn-Fenster schließen?\n\nJede CD, die gerade gebrannt wird, ist damit unbrauchbar!\n\nJetzt schließen?", "Beenden?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+	  int answer = javax.swing.JOptionPane.showOptionDialog(this, "Wirklich das Brenn-Fenster schlieï¿½en?\n\nJede CD, die gerade gebrannt wird, ist damit unbrauchbar!\n\nJetzt schlieï¿½en?", "Beenden?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
 	  if (answer != JOptionPane.CLOSED_OPTION && answer == 0) {
 		  Process p2;
 		  Process p3;
 		  userQuit = true;
 	      try {
+	    	multiburnProcess.destroy();
 	        p2 = runEnviron.exec("killall -9 multiburn");
 	        p3 = runEnviron.exec("rm -rf " + DB.getTempDir() + ".multiburn");
 	      }
 	      catch (IOException i8) {
-	        javax.swing.JOptionPane.showMessageDialog(this, "Could not kill multiburn\nPlease run 'killall -3 multiburn'", "Error", 0);
+	        javax.swing.JOptionPane.showMessageDialog(this, "Could not kill multiburn\nPlease run 'killall -9 multiburn'", "Error", 0);
 	      }
 		  parent.closeBurnWindow();
 	  }
