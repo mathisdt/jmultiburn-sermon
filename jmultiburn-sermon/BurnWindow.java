@@ -26,6 +26,8 @@ implements
   private javax.swing.JTextArea burnDisplay;
   private boolean userQuit;
   private SermonSelector parent = null;
+  
+  protected static final String MULTIBURN_COMMAND = "multiburn-sermon";
 
   BurnWindow(String s1, String s2, String[] s3, SermonSelector parent1) {
 	parent = parent1;
@@ -64,7 +66,7 @@ implements
     i9 = f8.getSize();
     burnDisplay.setFont(new java.awt.Font("Monospaced", 0, i9));
     burnDisplay.setEditable(false);
-    j10 = new javax.swing.JButton("Schlie�en");
+    j10 = new javax.swing.JButton("Schließen");
     j10.setActionCommand("quit");
     j10.addActionListener(this);
     j11 = new javax.swing.JLabel("Meldungen:");
@@ -79,7 +81,7 @@ implements
     setSize(getSize().width+20, getSize().height+30);
     setResizable(false);
     s12 = new String[s3.length + 3];
-    s12[0] = "multiburn-sermon";
+    s12[0] = MULTIBURN_COMMAND;
     s12[1] = s1;
     s12[2] = s2;
     i13 = 0;
@@ -99,7 +101,7 @@ implements
       setVisible(true);
     }
     catch (IOException i1) {
-      javax.swing.JOptionPane.showMessageDialog(this, "Could not run multiburn\nPlease check that it is in your $PATH", "Error", 0);
+      javax.swing.JOptionPane.showMessageDialog(this, "Could not run " + MULTIBURN_COMMAND + "\nPlease check that it is in your $PATH", "Error", 0);
       dispose();
     }
   }
@@ -116,18 +118,21 @@ implements
   
   protected void exit() {
 	  Object[] options = {"Ja, wirklich!", "Nein, lieber doch nicht..."};
-	  int answer = javax.swing.JOptionPane.showOptionDialog(this, "Wirklich das Brenn-Fenster schlie�en?\n\nJede CD, die gerade gebrannt wird, ist damit unbrauchbar!\n\nJetzt schlie�en?", "Beenden?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+	  int answer = javax.swing.JOptionPane.showOptionDialog(this, "Wirklich das Brenn-Fenster schließen?\n\nJede CD, die gerade gebrannt wird, ist damit unbrauchbar!\n\nJetzt schließen?", "Beenden?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
 	  if (answer != JOptionPane.CLOSED_OPTION && answer == 0) {
 		  Process p2;
 		  Process p3;
 		  userQuit = true;
 	      try {
+	    	// ursprünglichen Prozess zerstören
 	    	multiburnProcess.destroy();
-	        p2 = runEnviron.exec("killall -9 multiburn");
+	    	// alle Forks zerstören, die der Prozess selbst initiiert hat
+	        p2 = runEnviron.exec("killall -9 " + MULTIBURN_COMMAND);
+	        // die temporären Dateien löschen, sonst läuft die Platte voll
 	        p3 = runEnviron.exec("rm -rf " + DB.getTempDir() + ".multiburn");
 	      }
 	      catch (IOException i8) {
-	        javax.swing.JOptionPane.showMessageDialog(this, "Could not kill multiburn\nPlease run 'killall -9 multiburn'", "Error", 0);
+	        javax.swing.JOptionPane.showMessageDialog(this, "Could not kill " + MULTIBURN_COMMAND + "\nPlease run 'killall -9 " + MULTIBURN_COMMAND + "'", "Error", 0);
 	      }
 		  parent.closeBurnWindow();
 	  }

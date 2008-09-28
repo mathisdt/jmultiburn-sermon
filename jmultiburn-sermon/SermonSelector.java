@@ -46,9 +46,9 @@ public class SermonSelector extends JFrame implements ActionListener {
 					bettername = rest;
 				}
 				bettername = replace(bettername, "_", " ");
-				bettername = replace(bettername, "fruehstueck", "frühstück");
-				bettername = replace(bettername, "Maenner", "Männer");
-				bettername = replace(bettername, "Joerg", "Jörg");
+				bettername = replace(bettername, "fruehstueck", "frÃ¼hstÃ¼ck");
+				bettername = replace(bettername, "Maenner", "MÃ¤nner");
+				bettername = replace(bettername, "Joerg", "JÃ¶rg");
 				JLabel datelabel = new JLabel(vorname.substring(8,10)+"."+vorname.substring(5,7)+"."+vorname.substring(0,4));
 				JLabel namelabel = new JLabel(bettername);
 				JLabel ratelabel = new JLabel("(" + rate + ")");
@@ -66,7 +66,7 @@ public class SermonSelector extends JFrame implements ActionListener {
 				button.setForeground(Color.BLACK);
 				buttons.add(button);
 				
-				// Elemente hinzufügen
+				// Elemente hinzufÃ¼gen
 				JPanel datepanel = new JPanel();
 				datepanel.setLayout(new BoxLayout(datepanel, BoxLayout.Y_AXIS));
 				datepanel.add(datelabel);
@@ -102,12 +102,13 @@ public class SermonSelector extends JFrame implements ActionListener {
         setSize(new Dimension(924, 668));
 		setLocation(new Point(50, 50));
 		setVisible(true);
+		liste.scrollRectToVisible(new Rectangle(0, ((int)liste.getSize().getHeight()) - 1, 1, 1));
 	}
 	
 	protected void exit() {
-		// stelle sicher, dass es sicher ist, das Programm zu schließen
+		// stelle sicher, dass es sicher ist, das Programm zu schlieÃŸen
 		if (burnWindow==null) {
-			// schließe das Programm
+			// schlieÃŸe das Programm
 			System.exit(0);
 		}
 	}
@@ -122,7 +123,7 @@ public class SermonSelector extends JFrame implements ActionListener {
 			}
 			button.setEnabled(false);
 		}
-		// jetzt Brennfenster öffnen
+		// jetzt Brennfenster Ã¶ffnen
 		burnWindow = new BurnWindow("-s", DB.getSermonsDir() + ae.getActionCommand(), DB.getBurners(), this);
 	}
 	
