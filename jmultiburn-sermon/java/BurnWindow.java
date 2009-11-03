@@ -3,7 +3,7 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Font;
 import java.awt.event.*;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -89,14 +89,19 @@ implements
     for (String device : burnDevices) {
       multiburnCommandLine.add(device);
     }
-    runMultiburn((String[])multiburnCommandLine.toArray());
+    runMultiburn((String[])multiburnCommandLine.toArray(new String[] {}));
   }
 
   private Process multiburnProcess;
   private void runMultiburn(String[] s1) {
     runEnviron = Runtime.getRuntime();
     try {
-      multiburnProcess = runEnviron.exec(s1);
+      File tempDir = new File(DB.getTempDir());
+      if (!tempDir.exists() || !tempDir.canWrite()) {
+    	  // temporäres Verzeichnis ist kaputt, also lieber das aktuelle Verzeichnis nehmen
+    	  tempDir = null;
+      }
+      multiburnProcess = runEnviron.exec(s1, null, tempDir);
       new BurnMonitor(burnDisplay, burnDispScrl, multiburnProcess);
       setVisible(true);
     }

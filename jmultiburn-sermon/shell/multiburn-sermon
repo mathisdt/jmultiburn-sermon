@@ -33,8 +33,6 @@ PREGAP=""
 
 #------------------------------------------------------------------------------------------------------
 
-cd /daten/temp
-
 case "$1" in
     -a)
 	TYPE="audioDir";;
@@ -202,12 +200,12 @@ singleAudioPrep()
 	WAVEPART=$(echo "1*0$2"|bc)
 	PARTOPTIONS=""
 	if [[ $WAVEPART > 0 ]]; then
-	  	echo "Verwende den $WAVEPART. Teil der Audio-Datei..."
+	  	echo "Verwende den $WAVEPART. Teil der Audio-Datei."
 	   	# a "part" is defined as an audio segment of max. 78 minutes = 4680 seconds
 	   	STARTPOS=$(echo "($WAVEPART-1)*4680"|bc)
 	    PARTOPTIONS="-ss $STARTPOS -endpos 4680"
 	else
-	    echo "Verwende die komplette Audio-Datei..."
+	    echo "Verwende die komplette Audio-Datei."
 	fi
 	mplayer -vo null -vc dummy -srate 44100 -af channels=2,format=s16le -ao pcm:file="$OUTFILE" $PARTOPTIONS "$INFILE" &> .multiburn/mplayer.log
         #mplayer doesn't return proper error codes, so need to test output file.
@@ -230,7 +228,7 @@ singleAudioPrep()
 	exit 1
     fi
     #Tell the user the length of the CD
-    echo "Die Länge der CD wird "`cdrdao show-toc .multiburn/multiburn.toc 2> /dev/null | grep END | tail -n 1 | awk '{ print $2 }' | cut -d '(' -f 1 |sed -e "s/:[[:digit:]]*$//"`" (min:sec) sein."
+    echo "Die LÃ¤nge der CD wird "`cdrdao show-toc .multiburn/multiburn.toc 2> /dev/null | grep END | tail -n 1 | awk '{ print $2 }' | cut -d '(' -f 1 |sed -e "s/:[[:digit:]]*$//"`" (min:sec) sein."
     SOURCE=.multiburn/multiburn.toc
     TYPE=cdrdao
 }
