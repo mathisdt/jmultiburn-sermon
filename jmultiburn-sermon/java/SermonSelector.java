@@ -2,11 +2,15 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.util.*;
-
+import java.util.List;
 import javax.swing.*;
 
 public class SermonSelector extends JFrame implements ActionListener {
 
+	public static int CD_LENGTH = 78;
+	
+	private static String SEPARATOR = "|";
+	
 	private JPanel liste = null;
 	private Vector buttons = null;
 	
@@ -34,10 +38,11 @@ public class SermonSelector extends JFrame implements ActionListener {
 			Arrays.sort(files);
 			Vector filevector = new Vector(Arrays.asList(files));
 			for (int i = 0; i < filevector.size(); i++) {
+				File file = (File)filevector.elementAt(i);
 				// pro Predigt:
-				int trennung = ((File)filevector.elementAt(i)).getName().lastIndexOf("-");
-				String vorname = ((File)filevector.elementAt(i)).getName().substring(0, trennung);
-				String rate = ((File)filevector.elementAt(i)).getName().substring(trennung+1, ((File)filevector.elementAt(i)).getName().lastIndexOf("."));
+				int trennung = file.getName().lastIndexOf("-");
+				String vorname = file.getName().substring(0, trennung);
+				String rate = file.getName().substring(trennung+1, file.getName().lastIndexOf("."));
 				String bettername;
 				String rest = vorname.substring(11);
 				if (rest.indexOf("-")>0) {
@@ -49,6 +54,14 @@ public class SermonSelector extends JFrame implements ActionListener {
 				bettername = replace(bettername, "fruehstueck", "frühstück");
 				bettername = replace(bettername, "Maenner", "Männer");
 				bettername = replace(bettername, "Joerg", "Jörg");
+				
+				// Länge in Minuten und Sekunden berechnen
+				double bitrate = Double.valueOf(rate.substring(0, 2));
+				double filesize = file.length();
+			    double length = Math.floor(filesize / bitrate * 0.008);
+			    double min = Math.floor(length / 60);
+			    double sec = length % 60;
+				
 				JLabel datelabel = new JLabel(vorname.substring(8,10)+"."+vorname.substring(5,7)+"."+vorname.substring(0,4));
 				JLabel namelabel = new JLabel(bettername);
 				JLabel ratelabel = new JLabel("(" + rate + ")");
@@ -59,12 +72,29 @@ public class SermonSelector extends JFrame implements ActionListener {
 				ratelabel.setFont(new Font("sansserif", Font.BOLD, 14));
 				ratelabel.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
 				
-				JButton button = new JButton("Brennen!");
-				button.setActionCommand(((File)filevector.elementAt(i)).getName());
-				button.addActionListener(this);
-				button.setBackground(Color.WHITE);
-				button.setForeground(Color.BLACK);
-				buttons.add(button);
+				List<JButton> createdButtons = new ArrayList<JButton>();
+				if (min<CD_LENGTH) {
+					JButton button = new JButton("Brennen!");
+					button.setActionCommand(file.getName());
+					button.addActionListener(this);
+					button.setBackground(Color.WHITE);
+					button.setForeground(Color.BLACK);
+					buttons.add(button);
+					createdButtons.add(button);
+				} else {
+					// Spezialbehandlung für Predigten, die zu lang für eine CD sind
+					int count = 1;
+					while (min - ((count-1) * CD_LENGTH) >= 0) {
+						JButton button = new JButton("CD " + count);
+						button.setActionCommand(file.getName() + SEPARATOR + count);
+						button.addActionListener(this);
+						button.setBackground(Color.WHITE);
+						button.setForeground(Color.BLACK);
+						buttons.add(button);
+						createdButtons.add(button);
+						count++;
+					}
+				}
 				
 				// Elemente hinzufügen
 				JPanel datepanel = new JPanel();
@@ -78,7 +108,9 @@ public class SermonSelector extends JFrame implements ActionListener {
 				ratepanel.add(ratelabel);
 				JPanel buttonpanel = new JPanel();
 				//buttonpanel.setLayout(new BoxLayout(buttonpanel, BoxLayout.Y_AXIS));
-				buttonpanel.add(button);
+				for (JButton button : createdButtons) {
+					buttonpanel.add(button);
+				}
 				if (i % 2 == 1) {
 					datepanel.setBackground(Color.lightGray);
 					namepanel.setBackground(Color.lightGray);
@@ -124,7 +156,15 @@ public class SermonSelector extends JFrame implements ActionListener {
 			button.setEnabled(false);
 		}
 		// jetzt Brennfenster öffnen
-		burnWindow = new BurnWindow("-s", DB.getSermonsDir() + ae.getActionCommand(), DB.getBurners(), this);
+		if (ae.getActionCommand().contains(SEPARATOR)) {
+			StringTokenizer t = new StringTokenizer(ae.getActionCommand(), SEPARATOR);
+			String fileName = t.nextToken();
+			String part = t.nextToken();
+			burnWindow = new BurnWindow("-s", DB.getSermonsDir() + fileName, part, DB.getBurners(), this);
+		} else {
+			// keine mehrteilige Predigt: Part "0" heißt "Predigt nicht aufteilen"
+			burnWindow = new BurnWindow("-s", DB.getSermonsDir() + ae.getActionCommand(), "0", DB.getBurners(), this);
+		}
 	}
 	
 	public void closeBurnWindow() {

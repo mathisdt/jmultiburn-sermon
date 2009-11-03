@@ -3,9 +3,8 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Font;
 import java.awt.event.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.*;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ImageIcon;
@@ -21,6 +20,7 @@ class BurnWindow extends javax.swing.JFrame
 implements
   java.awt.event.ActionListener
 {
+  private static final long serialVersionUID = 1L;
   private Runtime runEnviron;
   private javax.swing.JScrollPane burnDispScrl;
   private javax.swing.JTextArea burnDisplay;
@@ -29,7 +29,7 @@ implements
   
   protected static final String MULTIBURN_COMMAND = "multiburn-sermon";
 
-  BurnWindow(String s1, String s2, String[] s3, SermonSelector parent1) {
+  BurnWindow(String multiburnParameter, String fileToBurn, String part, String[] burnDevices, SermonSelector parent1) {
 	parent = parent1;
 	setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 	this.addWindowListener(
@@ -47,8 +47,7 @@ implements
     int i9;
     JButton j10;
     JLabel j11;
-    String[] s12;
-    int i13;
+    List<String> multiburnCommandLine = new ArrayList<String>();
     userQuit = false;
     setTitle("Brennen...");
     c4 = getContentPane();
@@ -80,16 +79,17 @@ implements
     pack();
     setSize(getSize().width+20, getSize().height+30);
     setResizable(false);
-    s12 = new String[s3.length + 3];
-    s12[0] = MULTIBURN_COMMAND;
-    s12[1] = s1;
-    s12[2] = s2;
-    i13 = 0;
-    while (i13 < s3.length) {
-      s12[i13 + 3] = s3[i13];
-      i13++;
+    multiburnCommandLine.add(MULTIBURN_COMMAND);
+    multiburnCommandLine.add(multiburnParameter);
+    multiburnCommandLine.add(fileToBurn);
+    if (part==null || part.length()==0) {
+    	part = "0";
     }
-    runMultiburn(s12);
+    multiburnCommandLine.add(part);
+    for (String device : burnDevices) {
+      multiburnCommandLine.add(device);
+    }
+    runMultiburn((String[])multiburnCommandLine.toArray());
   }
 
   private Process multiburnProcess;
