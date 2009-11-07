@@ -2,6 +2,7 @@
 #Program to initiate cdrecord or cdrdao on multiple devices,
 #recording on successive blanks until SIGINT (Ctrl-C) is received.
 #Copyright David Stark 2004 - 2005
+#Modifications by Mathis Dirksen-Thedens
 
 #This program is free software; you can redistribute it and/or modify
 #it under the terms of the GNU General Public License version 2 as published by
@@ -15,7 +16,8 @@
 
 #Any questions at all, email me at: davidstark (at) myrealbox (.) com
 
-VERSION=1.44
+# version was 1.44 originally
+VERSION=2.00
 
 
 #------------------------------------------------------------------------------------------------------
@@ -111,6 +113,8 @@ if [ $TYPE == "help" ]
     then
     echo "multiburn version $VERSION (C) 2004-2005 David Stark"
     echo ""
+    echo "=== modified by Mathis Dirksen-Thedens ==="
+    echo ""
     echo "This program starts cdrecord or cdrdao to burn one data set (audio or data)"
     echo "to multiple CDR devices, ejecting the CD when recording has finished."
     echo "When a writable CD is inserted into any of the specified drives,"
@@ -138,6 +142,8 @@ fi
 if [ $TYPE == "bogus" ] || [ $# -lt 3 ]
     then
     echo "multiburn version $VERSION (C) 2004-2005 David Stark"
+    echo ""
+    echo "=== modified by Mathis Dirksen-Thedens ==="
     echo ""
     echo "Usage: Audio file (single): -s <audio file> <part number> <device list>"
     echo "       Data: $0 -d <directory or file> 0 <device list>"
