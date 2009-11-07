@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+	- Erzeugt die JAR-Datei des Projekts
+	  (Hinweis: Source-Dateien werden NICHT automatisch vorher kompiliert!)
+-->
+<project default="jar" basedir=".">
+
+	<property name="start.dir" value="${basedir}" />
+	<property name="src.dir" value="${start.dir}/java" />
+	<property name="bin.dir" value="${start.dir}/java" />
+	<property name="target.dir" value="${start.dir}/target" />
+	<property name="release.dir" value="${start.dir}/release" />
+
+	<target name="jar">
+		<antcall target="prepare" />
+		<antcall target="createJar" />
+		<copy todir="${release.dir}">
+			<fileset dir="${start.dir}">
+				<include name="local.properties" />
+			</fileset>
+		</copy>
+		<echo file="${release.dir}/run-jmbs.bat" append="false">java -cp jmultiburn-sermon.jar;. Start %1 %2 %3 %4 %5 %6 %7 %8 %9
+</echo>
+		<echo file="${release.dir}/run-jmbs.sh" append="false">#!/bin/sh
+java -cp jmultiburn-sermon.jar:. Start $$*
+</echo>
+	</target>
+
+	<target name="prepare">
+		<mkdir dir="${target.dir}" />
+		<mkdir dir="${release.dir}"/>
+		<delete includeemptydirs="true">
+			<fileset dir="${target.dir}">
+				<include name="**/*"/>
+				<exclude name=".svn/**"/>
+			</fileset>
+		</delete>
+		<delete includeemptydirs="true">
+			<fileset dir="${release.dir}">
+				<include name="**/*"/>
+				<exclude name=".svn/**"/>
+			</fileset>
+		</delete>
+	</target>
+
+	<target name="createJar">
+		
+		<!-- Klassen und Ressourcen kopieren -->
+		<copy todir="${target.dir}">
+			<fileset dir="${bin.dir}">
+				<include name="**" />
+				<exclude name="CVS/**" />
+				<exclude name=".svn/**" />
+				<exclude name="**/*.java" />
+			</fileset>
+		</copy>
+
+		<!-- Ziel-JAR erstellen -->
+		<jar basedir="${target.dir}" destfile="${release.dir}/jmultiburn-sermon.jar">
+			<manifest>
+				<attribute name="Main-Class" value="Start" />
+				<attribute name="Implementation-Vendor" value="zephyrsoft.net"/>
+				<attribute name="Implementation-Title" value="JMultiBurn-Sermon"/>
+			</manifest>
+		</jar>
+	</target>
+
+</project>
