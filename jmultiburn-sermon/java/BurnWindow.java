@@ -89,7 +89,13 @@ implements
     for (String device : burnDevices) {
       multiburnCommandLine.add(device);
     }
-    runMultiburn((String[])multiburnCommandLine.toArray(new String[] {}));
+    String[] args = new String[multiburnCommandLine.size()];
+    int i = 0;
+    for (String arg : multiburnCommandLine) {
+      args[i] = arg;
+      i++;
+    }
+    runMultiburn(args);
   }
 
   private Process multiburnProcess;
