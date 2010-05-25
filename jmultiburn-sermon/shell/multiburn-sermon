@@ -178,17 +178,25 @@ singleAudioPrep()
 	echo "Exiting."
 	exit 1
     fi
+    if ! echo "CD_DA" > .multiburn/multiburn.toc
+	then
+	echo "Could not create temporary TOC file:"
+	echo "$PWD/.multiburn/multiburn.toc"
+	echo "Exiting."
+	exit 1
+	fi
     #Check file to see if it nees re-encoding
     if file -L "$1" | grep RIFF | grep PCM | grep "16 bit" | grep stereo | grep 44100 &> /dev/null
 	then
-        #No re-encode required
-	if ! echo "CD_DA TRACK AUDIO AUDIOFILE "\""$1"\"" 0" > .multiburn/multiburn.toc
-	    then
-	    echo "Could not create temporary TOC file:"
-	    echo "$PWD/.multiburn/multiburn.toc"
-	    echo "Exiting."
-	    exit 1
-	fi
+        # split wave file to five-minute-slices - assume maximum length of two hours
+	    wavsplit --seconds "$1" 300 600 900 1200 1500 1800 2100 2400 2700 3000 3300 3600 3900 4200 4500 4800 5100 5400 5700 6000 6300 6600 6900 7200 >/dev/null 2>&1
+	    # and generate the TOC
+	    splitdir=$(echo $1 | sed -e 's#\.wav$##')
+	    splitcount=$(ls $splitdir | wc -l)
+	    echo "Audiodatei in $splitcount Tracks zu je 5 Minuten aufgeteilt."
+	    for splitfile in $splitdir/*.wav; do
+	      echo "TRACK AUDIO AUDIOFILE "\""$splitfile"\"" 0" >> .multiburn/multiburn.toc
+	    done
 	echo "$1 added."
 	echo ""
     else
@@ -217,7 +225,15 @@ singleAudioPrep()
         #mplayer doesn't return proper error codes, so need to test output file.
 	if file -L "$OUTFILE" | grep RIFF | grep PCM | grep "16 bit" | grep stereo | grep 44100 &> /dev/null
 	    then
-	    echo "CD_DA TRACK AUDIO AUDIOFILE "\""$OUTFILE"\"" 0" >> .multiburn/multiburn.toc
+	    # split wave file to five-minute-slices - assume maximum length of two hours
+	    wavsplit --seconds "$OUTFILE" 300 600 900 1200 1500 1800 2100 2400 2700 3000 3300 3600 3900 4200 4500 4800 5100 5400 5700 6000 6300 6600 6900 7200 >/dev/null 2>&1
+	    # and generate the TOC
+	    splitdir=$(echo $OUTFILE | sed -e 's#\.wav$##')
+	    splitcount=$(ls $splitdir | wc -l)
+	    echo "Audiodatei in $splitcount Tracks zu je 5 Minuten aufgeteilt."
+	    for splitfile in $splitdir/*.wav; do
+	      echo "TRACK AUDIO AUDIOFILE "\""$splitfile"\"" 0" >> .multiburn/multiburn.toc
+	    done
 	else
 	    echo "$GO did not re-encode:"
 	    echo "Source file may not be playable by mplayer."
