@@ -8,10 +8,12 @@
 	<property name="start.dir" value="${basedir}" />
 	<property name="src.dir" value="${start.dir}/java" />
 	<property name="shellsrc.dir" value="${start.dir}/shell" />
+	<property name="utilssrc.dir" value="${start.dir}/utils" />
 	<property name="bin.dir" value="${start.dir}/java" />
 	<property name="target.dir" value="${start.dir}/target" />
 	<property name="release.dir" value="${start.dir}/release" />
 	<property name="shell.dir" value="${release.dir}/shell" />
+	<property name="utils.dir" value="${release.dir}/utils" />
 
 	<target name="jar">
 		<antcall target="prepare" />
@@ -19,6 +21,12 @@
 		<mkdir dir="${shell.dir}"/>
 		<copy todir="${shell.dir}">
 			<fileset dir="${shellsrc.dir}">
+				<include name="**" />
+			</fileset>
+		</copy>
+		<mkdir dir="${utils.dir}"/>
+		<copy todir="${utils.dir}">
+			<fileset dir="${utilssrc.dir}">
 				<include name="**" />
 			</fileset>
 		</copy>

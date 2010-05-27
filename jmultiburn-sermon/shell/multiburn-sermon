@@ -77,6 +77,11 @@ if [ $TYPE == "check" ]
         NEEDED_AUDIO="- mplayer\n$NEEDED_AUDIO"
         OK_AUDIO=false
     fi
+    if ! which wavsplit &> /dev/null
+        then
+        NEEDED_AUDIO="- wavsplit\n$NEEDED_AUDIO"
+        OK_AUDIO=false
+    fi
     if ! which bc &> /dev/null
         then
         NEEDED_AUDIO="- bc\n$NEEDED_AUDIO"
