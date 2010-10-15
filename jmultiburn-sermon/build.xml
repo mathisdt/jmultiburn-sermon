@@ -9,7 +9,7 @@
 	<property name="src.dir" value="${start.dir}/java" />
 	<property name="shellsrc.dir" value="${start.dir}/shell" />
 	<property name="utilssrc.dir" value="${start.dir}/utils" />
-	<property name="bin.dir" value="${start.dir}/java" />
+	<property name="bin.dir" value="${start.dir}/bin" />
 	<property name="target.dir" value="${start.dir}/target" />
 	<property name="release.dir" value="${start.dir}/release" />
 	<property name="shell.dir" value="${release.dir}/shell" />
