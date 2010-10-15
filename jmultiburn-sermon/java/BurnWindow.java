@@ -99,10 +99,12 @@ implements
   }
 
   private Process multiburnProcess;
+  private File tempDir;
+
   private void runMultiburn(String[] s1) {
     runEnviron = Runtime.getRuntime();
     try {
-      File tempDir = new File(DB.getTempDir());
+      tempDir = new File(DB.getTempDir());
       if (!tempDir.exists() || !tempDir.canWrite()) {
     	  // temporäres Verzeichnis ist kaputt, also lieber das aktuelle Verzeichnis nehmen
     	  tempDir = null;
@@ -140,7 +142,7 @@ implements
 	    	// alle Forks zerstören, die der Prozess selbst initiiert hat
 	        p2 = runEnviron.exec("killall -9 " + MULTIBURN_COMMAND);
 	        // die temporären Dateien löschen, sonst läuft die Platte voll
-	        p3 = runEnviron.exec("rm -rf " + DB.getTempDir() + ".multiburn");
+	        p3 = runEnviron.exec("rm -rf " + (tempDir==null ? "" : tempDir) + ".multiburn");
 	      }
 	      catch (IOException i8) {
 	        javax.swing.JOptionPane.showMessageDialog(this, "Could not kill " + MULTIBURN_COMMAND + "\nPlease run 'killall -9 " + MULTIBURN_COMMAND + "'", "Error", 0);
