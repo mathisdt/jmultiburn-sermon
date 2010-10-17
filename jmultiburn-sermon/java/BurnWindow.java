@@ -92,6 +92,7 @@ class BurnWindow extends javax.swing.JFrame implements java.awt.event.ActionList
 	
 	private Process multiburnProcess;
 	private File tempDir;
+	private BurnMonitor burnMonitor;
 	
 	private void runMultiburn(List<String> commandLine) {
 		runEnviron = Runtime.getRuntime();
@@ -103,7 +104,7 @@ class BurnWindow extends javax.swing.JFrame implements java.awt.event.ActionList
 			}
 			String[] commandLineArray = commandLine.toArray(new String[0]);
 			multiburnProcess = runEnviron.exec(commandLineArray, null, tempDir);
-			new BurnMonitor(burnDisplay, burnDispScrl, multiburnProcess);
+			burnMonitor = new BurnMonitor(burnDisplay, burnDispScrl, multiburnProcess);
 			setVisible(true);
 		} catch (IOException i1) {
 			javax.swing.JOptionPane.showMessageDialog(this, "Could not run " + MULTIBURN_COMMAND
@@ -131,16 +132,14 @@ class BurnWindow extends javax.swing.JFrame implements java.awt.event.ActionList
 					"Wirklich das Brenn-Fenster schließen?\n\nJede CD, die gerade gebrannt wird, ist damit unbrauchbar!\n\nJetzt schließen?",
 					"Beenden?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
 		if (answer != JOptionPane.CLOSED_OPTION && answer == 0) {
-			Process p2;
-			Process p3;
 			userQuit = true;
 			try {
 				// ursprünglichen Prozess zerstören
 				multiburnProcess.destroy();
 				// alle Forks zerstören, die der Prozess selbst initiiert hat
-				p2 = runEnviron.exec("killall -9 " + MULTIBURN_COMMAND);
+				runEnviron.exec("killall -9 " + MULTIBURN_COMMAND);
 				// die temporären Dateien löschen, sonst läuft die Platte voll
-				p3 = runEnviron.exec("rm -rf " + (tempDir == null ? "" : tempDir) + ".multiburn");
+				runEnviron.exec("rm -rf " + (tempDir == null ? "" : tempDir.getAbsolutePath() + File.separator) + ".multiburn");
 			} catch (IOException i8) {
 				javax.swing.JOptionPane.showMessageDialog(this, "Could not kill " + MULTIBURN_COMMAND
 					+ "\nPlease run 'killall -9 " + MULTIBURN_COMMAND + "'", "Error", 0);
