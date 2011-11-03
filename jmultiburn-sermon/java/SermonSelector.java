@@ -6,7 +6,7 @@ import java.util.List;
 import javax.swing.*;
 
 public class SermonSelector extends JFrame implements ActionListener {
-
+	
 	public static int CD_LENGTH = 78;
 	
 	private static String SEPARATOR = "|";
@@ -21,18 +21,20 @@ public class SermonSelector extends JFrame implements ActionListener {
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		this.addWindowListener(
 			new WindowAdapter() {
+				@Override
 				public void windowClosing(WindowEvent e) {
 					exit();
 				}
 			}
-		);
+			);
 		
 		File dir = new File(DB.getSermonsDir());
 		File[] files = dir.listFiles();
+		int fileListLength = files.length;
 		liste = new JPanel(new SpringLayout());
 		buttons = new Vector();
 		
-		if (files == null || files.length == 0) {
+		if (files == null || fileListLength == 0) {
 			liste.add(new JLabel("Keine MP3s zum Brennen vorhanden!"));
 		} else {
 			Arrays.sort(files);
@@ -41,6 +43,10 @@ public class SermonSelector extends JFrame implements ActionListener {
 				File file = (File)filevector.elementAt(i);
 				// pro Predigt:
 				int trennung = file.getName().lastIndexOf("-");
+				if (trennung<0) {
+					fileListLength--;
+					continue;
+				}
 				String vorname = file.getName().substring(0, trennung);
 				String rate = file.getName().substring(trennung+1, file.getName().lastIndexOf("."));
 				String bettername;
@@ -58,9 +64,9 @@ public class SermonSelector extends JFrame implements ActionListener {
 				// Länge in Minuten und Sekunden berechnen
 				double bitrate = Double.valueOf(rate.substring(0, 2));
 				double filesize = file.length();
-			    double length = Math.floor(filesize / bitrate * 0.008);
-			    double min = Math.floor(length / 60);
-			    double sec = length % 60;
+				double length = Math.floor(filesize / bitrate * 0.008);
+				double min = Math.floor(length / 60);
+				double sec = length % 60;
 				
 				JLabel datelabel = new JLabel(vorname.substring(8,10)+"."+vorname.substring(5,7)+"."+vorname.substring(0,4));
 				JLabel namelabel = new JLabel(bettername);
@@ -123,16 +129,17 @@ public class SermonSelector extends JFrame implements ActionListener {
 				liste.add(buttonpanel);
 			}
 			SpringUtilities.makeCompactGrid(liste,
-                    files.length, 4, //rows, cols
-                    0, 0, //initialX, initialY
-                    0, 0);//xPad, yPad
+				fileListLength, 4, //rows, cols
+				0, 0, //initialX, initialY
+				0, 0);//xPad, yPad
 		}
 		JScrollPane scroller = new JScrollPane(liste);
 		scroller.getVerticalScrollBar().setUnitIncrement(20);
 		setContentPane(scroller);
 		pack();
-        setSize(new Dimension(924, 668));
+		setSize(new Dimension(924, 668));
 		setLocation(new Point(50, 50));
+		setExtendedState(Frame.MAXIMIZED_BOTH);
 		setVisible(true);
 		liste.scrollRectToVisible(new Rectangle(0, ((int)liste.getSize().getHeight()) - 1, 1, 1));
 	}
@@ -145,8 +152,9 @@ public class SermonSelector extends JFrame implements ActionListener {
 		}
 	}
 	
+	@Override
 	public void actionPerformed(ActionEvent ae) {
-//		System.out.println("Predigt: " + ae.getActionCommand());
+		//		System.out.println("Predigt: " + ae.getActionCommand());
 		// Buttons setzen
 		for (int i = 0; i < buttons.size(); i++) {
 			JButton button = (JButton)buttons.elementAt(i);
@@ -179,11 +187,11 @@ public class SermonSelector extends JFrame implements ActionListener {
 	}
 	
 	public static String replace(String in, String toreplace, String replacewith) {
-        String ret = new String(in.toString());
+		String ret = new String(in.toString());
 		while (ret.indexOf(toreplace)>=0) {
-	  		ret = ret.substring(0, ret.indexOf(toreplace)) +
-	  			replacewith +
-            		ret.substring(ret.indexOf(toreplace) + toreplace.length());
+			ret = ret.substring(0, ret.indexOf(toreplace)) +
+				replacewith +
+				ret.substring(ret.indexOf(toreplace) + toreplace.length());
 		}
 		return ret;
 	}
