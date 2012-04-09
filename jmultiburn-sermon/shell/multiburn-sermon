@@ -1,35 +1,35 @@
 #!/bin/bash
-#Program to initiate cdrecord or cdrdao on multiple devices,
-#recording on successive blanks until SIGINT (Ctrl-C) is received.
-#Copyright David Stark 2004 - 2005
-#Modifications by Mathis Dirksen-Thedens
+# Program to initiate wodim or cdrdao on multiple devices,
+# recording on successive blanks until SIGINT (Ctrl-C) is received.
+# Copyright David Stark 2004 - 2005
+# Modifications by Mathis Dirksen-Thedens
 
-#This program is free software; you can redistribute it and/or modify
-#it under the terms of the GNU General Public License version 2 as published by
-#the Free Software Foundation.
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as published by
+# the Free Software Foundation.
 
-#This program is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#GNU General Public License for more details:
-#http://www.gnu.org/copyleft/gpl.html
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details:
+# http://www.gnu.org/copyleft/gpl.html
 
-#Any questions at all, email me at: davidstark (at) myrealbox (.) com
+# Any questions at all, email me at: davidstark (at) myrealbox (.) com
 
 # version was 1.44 originally
-VERSION=2.00
+VERSION=2.01
 
 
 #------------------------------------------------------------------------------------------------------
 
 
-#This is the burning speed. Change to suit.
+# This is the burning speed. Change to suit.
 SPEED=24
 
-#This is only for the -a (audio directory) burn type.
-#the format is PREGAP=mm:ss:ff
-#So, a one second gap between tracks would be: PREGAP=0:1:0
-#Leave as "" for no pregap
+# This is only for the -a (audio directory) burn type.
+# the format is PREGAP=mm:ss:ff
+# So, a one second gap between tracks would be: PREGAP=0:1:0
+# Leave as "" for no pregap
 PREGAP=""
 
 
@@ -62,9 +62,9 @@ if [ $TYPE == "check" ]
         NEEDED_BASELINE="- cdrdao\n$NEEDED_BASELINE"
         OK_BASELINE=false
     fi
-    if ! which cdrecord &> /dev/null
+    if ! which wodim &> /dev/null
         then
-        NEEDED_BASELINE="- cdrecord\n$NEEDED_BASELINE"
+        NEEDED_BASELINE="- wodim\n$NEEDED_BASELINE"
         OK_BASELINE=false
     fi
     if ! which mkisofs &> /dev/null
@@ -114,18 +114,18 @@ if [ $TYPE == "check" ]
     exit 0
 fi
 
-if [ $TYPE == "help" ]
+if [ $TYPE == "help" ] || [ $TYPE == "bogus" ] || [ $# -lt 3 ]
     then
     echo "multiburn version $VERSION (C) 2004-2005 David Stark"
     echo ""
     echo "=== modified by Mathis Dirksen-Thedens ==="
     echo ""
-    echo "This program starts cdrecord or cdrdao to burn one data set (audio or data)"
+    echo "This program starts wodim or cdrdao to burn one data set (audio or data)"
     echo "to multiple CDR devices, ejecting the CD when recording has finished."
     echo "When a writable CD is inserted into any of the specified drives,"
-    echo "recording of the data begins again."
+    echo "recording of the data begins automatically."
     echo ""
-    echo "Usage: Audio file (single): -s <audio file> <part number> <device list>"
+    echo "Usage: Audio file: $0 -s <audio file> <part number> <device list>"
     echo "       Data: $0 -d <directory or file> 0 <device list>"
     echo "       Audio Directory: $0 -a <directory> 0 <device list>"
     echo ""
@@ -133,29 +133,15 @@ if [ $TYPE == "help" ]
     echo "<part number> is either 0, then the whole audio file will be burned, or"
     echo "              it is greater than 0, then the n'th 78-minute-part of the"
     echo "              audio file will be burned"
-    echo "<directory> is a directory of audio files. Non audio files are skipped."
-    echo "<device list> must be a list of devices which cdrecord/cdrdao understands -"
-    echo "              see 'man cdrecord' for details."
+    echo "<directory> is a directory of audio files. Non-audio files are skipped."
+    echo "<device list> must be a list of devices which wodim/cdrdao understands -"
+    echo "              see 'man wodim' for details."
     echo ""
     echo "If necessary, any non-CD format audio files will be converted using mplayer."
     echo ""
-    echo "Do Ctrl-C to terminate when recording is finished."
+    echo "Press Ctrl-C to terminate when recording is finished."
     exit 0
 fi
-
-#Bad command line arguments
-if [ $TYPE == "bogus" ] || [ $# -lt 3 ]
-    then
-    echo "multiburn version $VERSION (C) 2004-2005 David Stark"
-    echo ""
-    echo "=== modified by Mathis Dirksen-Thedens ==="
-    echo ""
-    echo "Usage: Audio file (single): -s <audio file> <part number> <device list>"
-    echo "       Data: $0 -d <directory or file> 0 <device list>"
-    echo "       Audio Directory: $0 -a <directory> 0 <device list>"
-    exit 1
-fi
-
 
 #------------------------------------------------------------------------------------------------------
 
@@ -169,11 +155,11 @@ PART="$3"
 #------------------------------------------------------------------------------------------------------
 
 
-#ALL *Prep() PROCEDURES MUST CHANGE THE $SOURCE AND $TYPE VARIABLES.
+# ALL *Prep() PROCEDURES MUST CHANGE THE $SOURCE AND $TYPE VARIABLES.
 
 
-#Do sanity check for single audio file, convert if necessary.
-#singleAudioPrep(<audio file>, part)
+# Do sanity check for single audio file, convert if necessary.
+# singleAudioPrep(<audio file>, part)
 singleAudioPrep()
 {
     #Does the data exist?
@@ -190,7 +176,7 @@ singleAudioPrep()
 	echo "Exiting."
 	exit 1
 	fi
-    #Check file to see if it nees re-encoding
+    # Check file to see if it nees re-encoding
     if file -L "$1" | grep RIFF | grep PCM | grep "16 bit" | grep stereo | grep 44100 &> /dev/null
 	then
         # split wave file to five-minute-slices - assume maximum length of two hours
@@ -205,9 +191,9 @@ singleAudioPrep()
 	echo "$1 added."
 	echo ""
     else
-        #Get here if we need to re-encode
-	INFILE=`echo "$1" | sed s://*:/:g`
-	OUTFILE=".multiburn/`basename "$INFILE"`.wav"
+        # Get here if we need to re-encode
+        INFILE=$(echo "$1" | sed s://*:/:g)
+        OUTFILE=".multiburn/$(basename "$INFILE").wav"
 	echo "Bereite Datei vor: $1"
 	if ! which mplayer &> /dev/null
 	    then
@@ -227,7 +213,7 @@ singleAudioPrep()
 	    echo "Verwende die komplette Audio-Datei."
 	fi
 	mplayer -vo null -vc dummy -srate 44100 -af channels=2,format=s16le -ao pcm:file="$OUTFILE" $PARTOPTIONS "$INFILE" &> .multiburn/mplayer.log
-        #mplayer doesn't return proper error codes, so need to test output file.
+        # mplayer doesn't return proper error codes, so need to test output file.
 	if file -L "$OUTFILE" | grep RIFF | grep PCM | grep "16 bit" | grep stereo | grep 44100 &> /dev/null
 	    then
 	    # split wave file to five-minute-slices - assume maximum length of two hours
@@ -246,27 +232,27 @@ singleAudioPrep()
 	    exit 1
 	fi
     fi
-    #No tracks made it into the toc
-    #Not sure if this can ever be true, but better safe...
+    # No tracks made it into the toc
+    # Not sure if this can ever be true, but better safe...
     if ! grep TRACK .multiburn/multiburn.toc &> /dev/null
 	then
 	echo "No tracks to burn."
 	echo "Exiting."
 	exit 1
     fi
-    #Tell the user the length of the CD
-    echo "Die Länge der CD wird "`cdrdao show-toc .multiburn/multiburn.toc 2> /dev/null | grep END | tail -n 1 | awk '{ print $2 }' | cut -d '(' -f 1 |sed -e "s/:[[:digit:]]*$//"`" (min:sec) sein."
+    # Tell the user the length of the CD
+    echo "Die Länge der CD wird "$(cdrdao show-toc .multiburn/multiburn.toc 2> /dev/null | grep END | tail -n 1 | awk '{ print $2 }' | cut -d '(' -f 1 |sed -e "s/:[[:digit:]]*$//")" (min:sec) sein."
     SOURCE=.multiburn/multiburn.toc
     TYPE=cdrdao
 }
 
 
 
-#Do sanity check for data directory or single file
-#dataPrep(<directory or file>)
+# Do sanity check for data directory or single file
+# dataPrep(<directory or file>)
 dataPrep()
 {
-    #Does the data exist?
+    # Does the data exist?
     if ! [ -e "$1" ]
 	then
 	echo "$1 does not exist."
@@ -282,24 +268,23 @@ dataPrep()
 	echo "Exiting."
 	exit 1
     fi
-    #Tell the user what's going on.
+    # Tell the user what's going on.
     echo "*********************************************"
     echo -n "The image is "
     du -h .multiburn/multiburn.iso | awk '{ print $1 }'
     echo "*********************************************"
     SOURCE=.multiburn/multiburn.iso
-    TYPE=cdrecord
+    TYPE=wodim
     PART=0
 }
 
 
 
-#Do sanity check for audio files directory
-#and prepare TOC file.
-#audioDirPrep(<directory>)
+# Do sanity check for audio files directory and prepare TOC file.
+# audioDirPrep(<directory>)
 audioDirPrep()
 {
-    #Does the directory exist?
+    # Does the directory exist?
     if ! [ -d "$1" ]
 	then
 	echo "$1 is not a directory."
@@ -317,10 +302,10 @@ audioDirPrep()
     FILECOUNT=0
     for GO in "$1"/*
       do
-      #Strip multiple slashes
-      GO=`echo "$GO" | sed s://*:/:g`
+      # Strip multiple slashes
+      GO=$(echo "$GO" | sed s://*:/:g)
       ((FILECOUNT++))
-      #True, if the file is already CD format
+      # True, if the file is already CD format
       if file -L "$GO" | grep RIFF | grep PCM | grep "16 bit" | grep stereo | grep 44100 &> /dev/null
 	  then
 	  echo "$GO added."
@@ -333,10 +318,10 @@ audioDirPrep()
 	  fi
 	  TRACKLIST[$FILECOUNT]="$GO"
       else
-          #Get here if we need to re-encode
-	  OUTFILE=.multiburn/`basename "$GO"`.wav
+          # Get here if we need to re-encode
+          OUTFILE=.multiburn/$(basename "$GO").wav
 	  echo "Attempting to re-encode $GO."
-          #Re-encoded tracks go to .multiburn/ Log goes to .multiburn/mplayerX.log
+          # Re-encoded tracks go to .multiburn/ Log goes to .multiburn/mplayerX.log
 	  mplayer -vo null -vc dummy -srate 44100 -af channels=2,format=s16le -ao pcm:file="$OUTFILE" "$GO" &> .multiburn/mplayer$FILECOUNT.log
 	  if file -L "$OUTFILE" | grep RIFF | grep PCM | grep "16 bit" | grep stereo | grep 44100 &> /dev/null
 	      then
@@ -363,14 +348,14 @@ audioDirPrep()
 	  fi
       fi
     done
-    #No tracks made it into the toc. Not really an error, but I'm calling it one.
+    # No tracks made it into the toc. Not really an error, but I'm calling it one.
     if ! grep TRACK .multiburn/multiburn.toc &> /dev/null
 	then
 	echo "No tracks to burn."
 	echo "Exiting."
 	exit 1
     fi
-    #Tell the user what's going on (order of tracks and total disc time)
+    # Tell the user what's going on (order of tracks and total disc time)
     echo "*************************************************"
     echo "The tracks will be burned in the following order:"
     for ((IND=1; IND <= FILECOUNT ; IND++))
@@ -380,7 +365,7 @@ audioDirPrep()
 	  echo ${TRACKLIST[$IND]}
       fi
     done
-    echo "The disc will be "`cdrdao show-toc .multiburn/multiburn.toc 2> /dev/null | grep END | tail -n 1 | awk '{ print $2 }' | cut -d '(' -f 1`" (mm:ss:ff)"
+    echo "The disc will be "$(cdrdao show-toc .multiburn/multiburn.toc 2> /dev/null | grep END | tail -n 1 | awk '{ print $2 }' | cut -d '(' -f 1)" (mm:ss:ff)"
     echo "*************************************************"
     SOURCE=.multiburn/multiburn.toc
     TYPE=cdrdao
@@ -392,7 +377,7 @@ audioDirPrep()
 #------------------------------------------------------------------------------------------------------
 
 
-#burn(<burner device>, <type of burn>, <source TOC/cue/image>, <burner index>).
+# burn(<burner device>, <type of burn>, <source TOC/cue/image>, <burner index>).
 burn()
 {
     BURNBURNER="$1"
@@ -400,11 +385,11 @@ burn()
     BURNSOURCE="$3"
     BURNNUM=$4
     
-    #Make sure the specified burner is accessable.
-    #We don't want loops going for burners that can't burn
-    if ! cdrecord --inq dev="$BURNBURNER" &> /dev/null
+    # Make sure the specified burner is accessable.
+    # We don't want loops going for burners that can't burn
+    if ! wodim --inq dev="$BURNBURNER" &> /dev/null
 	then
-	echo "$BURNBURNER cannot be accessed by cdrecord."
+	echo "$BURNBURNER cannot be accessed by wodim."
 	echo "Continuing without $BURNBURNER"
 	exit 1
     fi
@@ -413,12 +398,12 @@ burn()
     while true
       do
       
-      #Check for media in drive
-      if ! cdrecord -V --inq dev="$BURNBURNER" 2>&1 | grep "medium not present" &> /dev/null
+      # Check for media in drive
+      if ! wodim -V --inq dev="$BURNBURNER" 2>&1 | grep -E "medium not present|logical unit is in process of becoming ready" &> /dev/null
 	  then
 	  echo "CD gefunden in $1. Brenne diese CD jetzt."
 	  
-          #Check to see if media is blank or CDRW
+          # Check to see if media is blank or CDRW
 	  cdrdao disk-info --device "$BURNBURNER" 2> /dev/null |\
 	      grep "CD-R empty" | grep "yes" &> /dev/null
 	  CDRBLANK=$?
@@ -427,18 +412,18 @@ burn()
 	  CDRWMEDIA=$?
 	  if [ $CDRBLANK == 0 ] || [ $CDRWMEDIA == 0 ]
 	      then	      
-              #Make sure the data exists
-	      if ! [ -e "$BURNSOURCE" ]
-		  then
+              # Make sure the data exists
+	          if ! [ -e "$BURNSOURCE" ]
+		      then
                   #If we get here, it's my fault. E-mail me.
-		  echo "$BURNSOURCE does not exist."
-		  echo "Exiting."
-		  exit 1
-	      fi
+		          echo "$BURNSOURCE does not exist."
+		          echo "Exiting."
+		          exit 1
+	          fi
 	      
 	      case $BURNTYPE in
 		  cdrdao)
-                      #Audio / single wav burn command
+              # Audio / single wav burn command
 		      if ! cdrdao show-toc "$BURNSOURCE" &> /dev/null
 			  then
 			  echo "$BURNSOURCE is not a valid TOC or cue file."
@@ -449,20 +434,20 @@ burn()
 			  "$BURNSOURCE" &> .multiburn/lastWrite$BURNNUM.log
 		      RESULT="$?"
 		      ;;
-		  cdrecord)
-                      #Data (all) burn command
-		      cdrecord -dao --eject --speed $SPEED --gracetime=2 driveropts=burnfree dev="$BURNBURNER"\
+		  wodim)
+              # Data (all) burn command
+		      wodim -dao --eject --speed $SPEED --gracetime=2 driveropts=burnfree dev="$BURNBURNER"\
 			  --data "$BURNSOURCE" &> .multiburn/lastWrite$BURNNUM.log
 		      RESULT="$?"
 		      ;;
 		  *)
-                      #If we get here, it's my fault. E-mail me.
+              # If we get here, it's my fault. E-mail me.
 		      echo "Serious error. Exiting."
 		      exit 1
 		      ;;
 	      esac
 	      
-              #Result of burn
+              # Result of burn
 	      if [ $RESULT == 0 ]
 		  then
 		  echo "Brennen erfolgreich in $BURNBURNER."
@@ -470,13 +455,11 @@ burn()
 	      else
 		  echo "FEHLER in $BURNBURNER:"
 		  echo "Die CD in $BURNBURNER wurde NICHT korrekt gebrannt!"
-#		  echo "Check $PWD/.multiburn/lastWrite$BURNNUM.log BEFORE doing Ctrl-C."
-		  cdrecord --eject dev="$BURNBURNER" &> /dev/null
+		  wodim --eject dev="$BURNBURNER" &> /dev/null
 	      fi
 	  else
-	      
-              #Disk wasn't blank
-	      cdrecord --eject dev="$BURNBURNER" &> /dev/null
+          # Disk wasn't blank or the status check command returned 'ready' erroneously
+	      wodim --eject dev="$BURNBURNER" &> /dev/null
 		  echo "FEHLER in $BURNBURNER:"
 		  echo "Die CD in $BURNBURNER ist nicht leer!"
 	      sleep 2
@@ -515,14 +498,14 @@ if ! which cdrdao &> /dev/null
     echo "Please make sure cdrdao is installed and in your path."
     exit 1
 fi
-if ! which cdrecord &> /dev/null
+if ! which wodim &> /dev/null
     then
-    echo "Could not find cdrecord."
-    echo "Please make sure cdrecord is installed and in your path."
+    echo "Could not find wodim."
+    echo "Please make sure wodim is installed and in your path."
     exit 1
 fi
 
-#Do preperation
+# Do preperation
 case $TYPE in
     audioDir)
 	audioDirPrep "$SOURCE";;
@@ -534,13 +517,13 @@ case $TYPE in
 	singleAudioPrep "$SOURCE" "$PART";;
 
     *)
-        #If we get here, it's my fault. E-mail me.
+     # If we get here, it's my fault. E-mail me.
 	echo "Serious error. Exiting."
 	exit 1
 	;;
 esac
 
-#Start burner loops
+# Start burner loops
 LOOPCOUNT=-3
 for BURNER in "$@"
   do  (( LOOPCOUNT++ ))
@@ -551,10 +534,10 @@ for BURNER in "$@"
 done
 
 
-#Kill subshells, remove scratch directory then exit
+# Kill subshells, remove scratch directory then exit
 trap "pkill -P $$ &> /dev/null; rm -rf .multiburn/; exit 0" SIGINT
 
-#relax
+# relax
 wait
 
-#There is no more.
+# There is no more.
