@@ -1,8 +1,11 @@
-import java.io.*;
-import java.util.*;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
+import java.util.Vector;
 
-/** Klasse um die lokalen Einstellungen aus der local.properties zu laden
- *  ==> mittels des "Singleton" Design Patterns implementiert <== */
+/**
+ * Klasse um die lokalen Einstellungen aus der local.properties zu laden
+ * ==> mittels des "Singleton" Design Patterns implementiert <==
+ */
 public class DB {
 	private static final DB _instance = new DB();
 	
@@ -15,7 +18,7 @@ public class DB {
 	private static DB getInstance() {
 		return _instance;
 	}
-
+	
 	private static String getString(String key) {
 		try {
 			return getInstance().RESOURCE_BUNDLE.getString(key);
@@ -25,10 +28,10 @@ public class DB {
 	}
 	
 	public static String[] getBurners() {
-		Vector burners_temp = new Vector();
+		Vector<Object> burners_temp = new Vector<Object>();
 		int i = 1;
 		while (true) {
-			String burner = getInstance().getString("burner" + i++);
+			String burner = getString("burner" + i++);
 			if (burner != null) {
 				burners_temp.add(burner);
 			} else {
@@ -37,16 +40,16 @@ public class DB {
 		}
 		String[] burners_array = new String[burners_temp.size()];
 		for (int j = 0; j < burners_temp.size(); j++) {
-			burners_array[j] = (String)burners_temp.elementAt(j);
+			burners_array[j] = (String) burners_temp.elementAt(j);
 		}
 		return burners_array;
 	}
 	
 	public static String getSermonsDir() {
-		return getInstance().getString("sermonsdir");
+		return getString("sermonsdir");
 	}
 	
 	public static String getTempDir() {
-		return getInstance().getString("tempdir");
+		return getString("tempdir");
 	}
 }

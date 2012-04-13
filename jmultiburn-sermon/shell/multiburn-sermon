@@ -24,7 +24,7 @@ VERSION=2.01
 
 
 # This is the burning speed. Change to suit.
-SPEED=24
+SPEED=40
 
 # This is only for the -a (audio directory) burn type.
 # the format is PREGAP=mm:ss:ff
@@ -37,15 +37,15 @@ PREGAP=""
 
 case "$1" in
     -a)
-	TYPE="audioDir";;
+    TYPE="audioDir";;
     -d)
-	TYPE="data";;
+    TYPE="data";;
     -s)
-	TYPE="singleAudio";;
+    TYPE="singleAudio";;
     -h | --help)
-	TYPE="help";;
+    TYPE="help";;
     *)
-	TYPE="bogus";;
+    TYPE="bogus";;
 esac
 
 if [ $TYPE == "check" ]
@@ -164,81 +164,81 @@ singleAudioPrep()
 {
     #Does the data exist?
     if ! [ -e "$1" ]
-	then
-	echo "$1 does not exist."
-	echo "Exiting."
-	exit 1
+        then
+        echo "$1 does not exist."
+        echo "Exiting."
+        exit 1
     fi
     if ! echo "CD_DA" > .multiburn/multiburn.toc
-	then
-	echo "Could not create temporary TOC file:"
-	echo "$PWD/.multiburn/multiburn.toc"
-	echo "Exiting."
-	exit 1
-	fi
+        then
+        echo "Could not create temporary TOC file:"
+        echo "$PWD/.multiburn/multiburn.toc"
+        echo "Exiting."
+        exit 1
+    fi
     # Check file to see if it nees re-encoding
     if file -L "$1" | grep RIFF | grep PCM | grep "16 bit" | grep stereo | grep 44100 &> /dev/null
-	then
+        then
         # split wave file to five-minute-slices - assume maximum length of two hours
-	    wavsplit --seconds "$1" 300 600 900 1200 1500 1800 2100 2400 2700 3000 3300 3600 3900 4200 4500 4800 5100 5400 5700 6000 6300 6600 6900 7200 >/dev/null 2>&1
-	    # and generate the TOC
-	    splitdir=$(echo $1 | sed -e 's#\.wav$##')
-	    splitcount=$(ls $splitdir | wc -l)
-	    echo "Audiodatei in $splitcount Tracks zu je 5 Minuten aufgeteilt."
-	    for splitfile in $splitdir/*.wav; do
-	      echo "TRACK AUDIO AUDIOFILE "\""$splitfile"\"" 0" >> .multiburn/multiburn.toc
-	    done
-	echo "$1 added."
-	echo ""
+        wavsplit --seconds "$1" 300 600 900 1200 1500 1800 2100 2400 2700 3000 3300 3600 3900 4200 4500 4800 5100 5400 5700 6000 6300 6600 6900 7200 >/dev/null 2>&1
+        # and generate the TOC
+        splitdir=$(echo $1 | sed -e 's#\.wav$##')
+        splitcount=$(ls $splitdir | wc -l)
+        echo "Audiodatei in $splitcount Tracks zu je 5 Minuten aufgeteilt."
+        for splitfile in $splitdir/*.wav; do
+            echo "TRACK AUDIO AUDIOFILE "\""$splitfile"\"" 0" >> .multiburn/multiburn.toc
+        done
+        echo "$1 added."
+        echo ""
     else
         # Get here if we need to re-encode
         INFILE=$(echo "$1" | sed s://*:/:g)
         OUTFILE=".multiburn/$(basename "$INFILE").wav"
-	echo "Bereite Datei vor: $1"
-	if ! which mplayer &> /dev/null
-	    then
-	    echo "mplayer is not available for re-encoding."
-	    echo "Exiting."
-	    exit 1
-	fi
-	# test if we need to cut out a special part of the wave file:
-	WAVEPART=$(echo "1*0$2"|bc)
-	PARTOPTIONS=""
-	if [[ $WAVEPART > 0 ]]; then
-	  	echo "Verwende den $WAVEPART. Teil der Audio-Datei."
-	   	# a "part" is defined as an audio segment of max. 78 minutes = 4680 seconds
-	   	STARTPOS=$(echo "($WAVEPART-1)*4680"|bc)
-	    PARTOPTIONS="-ss $STARTPOS -endpos 4680"
-	else
-	    echo "Verwende die komplette Audio-Datei."
-	fi
-	mplayer -vo null -vc dummy -srate 44100 -af channels=2,format=s16le -ao pcm:file="$OUTFILE" $PARTOPTIONS "$INFILE" &> .multiburn/mplayer.log
+        echo "Bereite Datei vor: $1"
+        if ! which mplayer &> /dev/null
+            then
+            echo "mplayer is not available for re-encoding."
+            echo "Exiting."
+            exit 1
+        fi
+        # test if we need to cut out a special part of the wave file:
+        WAVEPART=$(echo "1*0$2"|bc)
+        PARTOPTIONS=""
+        if [[ $WAVEPART > 0 ]]; then
+            echo "Verwende den $WAVEPART. Teil der Audio-Datei."
+            # a "part" is defined as an audio segment of max. 78 minutes = 4680 seconds
+            STARTPOS=$(echo "($WAVEPART-1)*4680"|bc)
+            PARTOPTIONS="-ss $STARTPOS -endpos 4680"
+        else
+            echo "Verwende die komplette Audio-Datei."
+        fi
+        mplayer -vo null -vc dummy -srate 44100 -af channels=2,format=s16le -ao pcm:file="$OUTFILE" $PARTOPTIONS "$INFILE" &> .multiburn/mplayer.log
         # mplayer doesn't return proper error codes, so need to test output file.
-	if file -L "$OUTFILE" | grep RIFF | grep PCM | grep "16 bit" | grep stereo | grep 44100 &> /dev/null
-	    then
-	    # split wave file to five-minute-slices - assume maximum length of two hours
-	    wavsplit --seconds "$OUTFILE" 300 600 900 1200 1500 1800 2100 2400 2700 3000 3300 3600 3900 4200 4500 4800 5100 5400 5700 6000 6300 6600 6900 7200 >/dev/null 2>&1
-	    # and generate the TOC
-	    splitdir=$(echo $OUTFILE | sed -e 's#\.wav$##')
-	    splitcount=$(ls $splitdir | wc -l)
-	    echo "Audiodatei in $splitcount Tracks zu je 5 Minuten aufgeteilt."
-	    for splitfile in $splitdir/*.wav; do
-	      echo "TRACK AUDIO AUDIOFILE "\""$splitfile"\"" 0" >> .multiburn/multiburn.toc
-	    done
-	else
-	    echo "$GO did not re-encode:"
-	    echo "Source file may not be playable by mplayer."
-	    echo "Exiting."
-	    exit 1
-	fi
+        if file -L "$OUTFILE" | grep RIFF | grep PCM | grep "16 bit" | grep stereo | grep 44100 &> /dev/null
+            then
+            # split wave file to five-minute-slices - assume maximum length of two hours
+            wavsplit --seconds "$OUTFILE" 300 600 900 1200 1500 1800 2100 2400 2700 3000 3300 3600 3900 4200 4500 4800 5100 5400 5700 6000 6300 6600 6900 7200 >/dev/null 2>&1
+            # and generate the TOC
+            splitdir=$(echo $OUTFILE | sed -e 's#\.wav$##')
+            splitcount=$(ls $splitdir | wc -l)
+            echo "Audiodatei in $splitcount Tracks zu je 5 Minuten aufgeteilt."
+            for splitfile in $splitdir/*.wav; do
+                echo "TRACK AUDIO AUDIOFILE "\""$splitfile"\"" 0" >> .multiburn/multiburn.toc
+            done
+        else
+            echo "$GO did not re-encode:"
+            echo "Source file may not be playable by mplayer."
+            echo "Exiting."
+            exit 1
+        fi
     fi
     # No tracks made it into the toc
     # Not sure if this can ever be true, but better safe...
     if ! grep TRACK .multiburn/multiburn.toc &> /dev/null
-	then
-	echo "No tracks to burn."
-	echo "Exiting."
-	exit 1
+        then
+        echo "No tracks to burn."
+        echo "Exiting."
+        exit 1
     fi
     # Tell the user the length of the CD
     echo "Die Länge der CD wird "$(cdrdao show-toc .multiburn/multiburn.toc 2> /dev/null | grep END | tail -n 1 | awk '{ print $2 }' | cut -d '(' -f 1 |sed -e "s/:[[:digit:]]*$//")" (min:sec) sein."
@@ -254,19 +254,19 @@ dataPrep()
 {
     # Does the data exist?
     if ! [ -e "$1" ]
-	then
-	echo "$1 does not exist."
-	echo "Exiting."
-	exit 1
+        then
+        echo "$1 does not exist."
+        echo "Exiting."
+        exit 1
     fi
     echo "Creating temporary ISO image."
     if ! mkisofs -J -r -o .multiburn/multiburn.iso "$SOURCE" &> .multiburn/isofs.log
-	then 
-	echo "Could not create temporary ISO image:"
-	echo "$PWD/.multiburn/multiburn.iso"
-	echo "Check $PWD/.multiburn/isofs.log"
-	echo "Exiting."
-	exit 1
+        then 
+        echo "Could not create temporary ISO image:"
+        echo "$PWD/.multiburn/multiburn.iso"
+        echo "Check $PWD/.multiburn/isofs.log"
+        echo "Exiting."
+        exit 1
     fi
     # Tell the user what's going on.
     echo "*********************************************"
@@ -286,17 +286,17 @@ audioDirPrep()
 {
     # Does the directory exist?
     if ! [ -d "$1" ]
-	then
-	echo "$1 is not a directory."
-	echo "Exiting."
-	exit 1
+        then
+        echo "$1 is not a directory."
+        echo "Exiting."
+        exit 1
     fi
     if ! echo "CD_DA" > .multiburn/multiburn.toc
-	then
-	echo "Could not create temporary TOC file:"
-	echo "$PWD/.multiburn/multiburn.toc"
-	echo "Exiting."
-	exit 1
+        then
+        echo "Could not create temporary TOC file:"
+        echo "$PWD/.multiburn/multiburn.toc"
+        echo "Exiting."
+        exit 1
     fi
 
     FILECOUNT=0
@@ -307,53 +307,53 @@ audioDirPrep()
       ((FILECOUNT++))
       # True, if the file is already CD format
       if file -L "$GO" | grep RIFF | grep PCM | grep "16 bit" | grep stereo | grep 44100 &> /dev/null
-	  then
-	  echo "$GO added."
-	  echo ""
-	  if [ x$PREGAP == "x" ]
-	      then
-	      echo "TRACK AUDIO AUDIOFILE "\""$GO"\"" 0" >> .multiburn/multiburn.toc
-	  else
-	      echo "TRACK AUDIO PREGAP ""$PREGAP"" AUDIOFILE "\""$GO"\"" 0" >> .multiburn/multiburn.toc
-	  fi
-	  TRACKLIST[$FILECOUNT]="$GO"
+          then
+          echo "$GO added."
+          echo ""
+          if [ x$PREGAP == "x" ]
+              then
+              echo "TRACK AUDIO AUDIOFILE "\""$GO"\"" 0" >> .multiburn/multiburn.toc
+          else
+              echo "TRACK AUDIO PREGAP ""$PREGAP"" AUDIOFILE "\""$GO"\"" 0" >> .multiburn/multiburn.toc
+          fi
+          TRACKLIST[$FILECOUNT]="$GO"
       else
           # Get here if we need to re-encode
           OUTFILE=.multiburn/$(basename "$GO").wav
-	  echo "Attempting to re-encode $GO."
+          echo "Attempting to re-encode $GO."
           # Re-encoded tracks go to .multiburn/ Log goes to .multiburn/mplayerX.log
-	  mplayer -vo null -vc dummy -srate 44100 -af channels=2,format=s16le -ao pcm:file="$OUTFILE" "$GO" &> .multiburn/mplayer$FILECOUNT.log
-	  if file -L "$OUTFILE" | grep RIFF | grep PCM | grep "16 bit" | grep stereo | grep 44100 &> /dev/null
-	      then
-	      if [ x$PREGAP == "x" ]
-		  then
-		  echo "TRACK AUDIO AUDIOFILE "\""$OUTFILE"\"" 0" >> .multiburn/multiburn.toc
-	      else
-		  echo "TRACK AUDIO PREGAP ""$PREGAP"" AUDIOFILE "\""$OUTFILE"\"" 0" >> .multiburn/multiburn.toc
-	      fi
-	      TRACKLIST[$FILECOUNT]="$OUTFILE"
-	      echo "Re-encoded file is $OUTFILE."
-	      echo ""
-	  else
-	      if which mplayer &> /dev/null
-		  then
-		  echo "$GO did not re-encode:"
-		  echo "Source file may not be playable by mplayer."
-		  echo ""
-	      else
-		  echo "mplayer is not available for re-encoding."
-		  echo "Skipping $GO."
-		  echo ""
-	      fi
-	  fi
+          mplayer -vo null -vc dummy -srate 44100 -af channels=2,format=s16le -ao pcm:file="$OUTFILE" "$GO" &> .multiburn/mplayer$FILECOUNT.log
+          if file -L "$OUTFILE" | grep RIFF | grep PCM | grep "16 bit" | grep stereo | grep 44100 &> /dev/null
+              then
+              if [ x$PREGAP == "x" ]
+                  then
+                  echo "TRACK AUDIO AUDIOFILE "\""$OUTFILE"\"" 0" >> .multiburn/multiburn.toc
+              else
+                  echo "TRACK AUDIO PREGAP ""$PREGAP"" AUDIOFILE "\""$OUTFILE"\"" 0" >> .multiburn/multiburn.toc
+              fi
+              TRACKLIST[$FILECOUNT]="$OUTFILE"
+              echo "Re-encoded file is $OUTFILE."
+              echo ""
+          else
+              if which mplayer &> /dev/null
+                  then
+                  echo "$GO did not re-encode:"
+                  echo "Source file may not be playable by mplayer."
+                  echo ""
+              else
+                  echo "mplayer is not available for re-encoding."
+                  echo "Skipping $GO."
+                  echo ""
+              fi
+          fi
       fi
     done
     # No tracks made it into the toc. Not really an error, but I'm calling it one.
     if ! grep TRACK .multiburn/multiburn.toc &> /dev/null
-	then
-	echo "No tracks to burn."
-	echo "Exiting."
-	exit 1
+        then
+        echo "No tracks to burn."
+        echo "Exiting."
+        exit 1
     fi
     # Tell the user what's going on (order of tracks and total disc time)
     echo "*************************************************"
@@ -361,8 +361,8 @@ audioDirPrep()
     for ((IND=1; IND <= FILECOUNT ; IND++))
       do
       if ! [ x"${TRACKLIST[$IND]}" == "x" ]
-	  then
-	  echo ${TRACKLIST[$IND]}
+          then
+          echo ${TRACKLIST[$IND]}
       fi
     done
     echo "The disc will be "$(cdrdao show-toc .multiburn/multiburn.toc 2> /dev/null | grep END | tail -n 1 | awk '{ print $2 }' | cut -d '(' -f 1)" (mm:ss:ff)"
@@ -371,7 +371,7 @@ audioDirPrep()
     TYPE=cdrdao
     PART=0
 }
-	 
+     
 
 
 #------------------------------------------------------------------------------------------------------
@@ -388,82 +388,90 @@ burn()
     # Make sure the specified burner is accessable.
     # We don't want loops going for burners that can't burn
     if ! wodim --inq dev="$BURNBURNER" &> /dev/null
-	then
-	echo "$BURNBURNER cannot be accessed by wodim."
-	echo "Continuing without $BURNBURNER"
-	exit 1
+        then
+        echo "$BURNBURNER cannot be accessed by wodim."
+        echo "Continuing without $BURNBURNER"
+        exit 1
     fi
     
-    echo "Beschreibbare CD in $1 einlegen."
+    echo "Beschreibbare CD in $BURNBURNER einlegen."
     while true
       do
       
       # Check for media in drive
-      if ! wodim -V --inq dev="$BURNBURNER" 2>&1 | grep -E "medium not present|logical unit is in process of becoming ready" &> /dev/null
-	  then
-	  echo "CD gefunden in $1. Brenne diese CD jetzt."
-	  
-          # Check to see if media is blank or CDRW
-	  cdrdao disk-info --device "$BURNBURNER" 2> /dev/null |\
-	      grep "CD-R empty" | grep "yes" &> /dev/null
-	  CDRBLANK=$?
-	  cdrdao disk-info --device "$BURNBURNER" 2> /dev/null |\
-	      grep "CD-RW" | grep "yes" &> /dev/null
-	  CDRWMEDIA=$?
-	  if [ $CDRBLANK == 0 ] || [ $CDRWMEDIA == 0 ]
-	      then	      
+      wodim -V --inq dev="$BURNBURNER" 2>&1 | grep -E "medium not present|logical unit is in process of becoming ready" &> /dev/null
+      DRIVEREADY=$?
+      if [ $DRIVEREADY == 1 ]
+          then
+          echo "CD gefunden in $BURNBURNER. Brenne diese CD jetzt."
+      
+#          # Check to see if media is blank or CDRW
+#          cdrdao disk-info --device "$BURNBURNER" 2> /dev/null |\
+#          grep "CD-R empty" | grep "yes" &> /dev/null
+#          CDRBLANK=$?
+#          cdrdao disk-info --device "$BURNBURNER" 2> /dev/null |\
+#          grep "CD-RW" | grep "yes" &> /dev/null
+#          CDRWMEDIA=$?
+#          echo "$BURNBURNER: CDRBLANK=$CDRBLANK CDRWMEDIA=$CDRWMEDIA"
+#          if [ $CDRBLANK == 0 -o $CDRWMEDIA == 0 ]
+#              then          
               # Make sure the data exists
-	          if ! [ -e "$BURNSOURCE" ]
-		      then
+              if ! [ -e "$BURNSOURCE" ]
+                  then
                   #If we get here, it's my fault. E-mail me.
-		          echo "$BURNSOURCE does not exist."
-		          echo "Exiting."
-		          exit 1
-	          fi
-	      
-	      case $BURNTYPE in
-		  cdrdao)
-              # Audio / single wav burn command
-		      if ! cdrdao show-toc "$BURNSOURCE" &> /dev/null
-			  then
-			  echo "$BURNSOURCE is not a valid TOC or cue file."
-			  echo "Exiting."
-			  exit 1
-		      fi
-		      cdrdao write --speed $SPEED --overburn -n --eject --device "$BURNBURNER"\
-			  "$BURNSOURCE" &> .multiburn/lastWrite$BURNNUM.log
-		      RESULT="$?"
-		      ;;
-		  wodim)
-              # Data (all) burn command
-		      wodim -dao --eject --speed $SPEED --gracetime=2 driveropts=burnfree dev="$BURNBURNER"\
-			  --data "$BURNSOURCE" &> .multiburn/lastWrite$BURNNUM.log
-		      RESULT="$?"
-		      ;;
-		  *)
-              # If we get here, it's my fault. E-mail me.
-		      echo "Serious error. Exiting."
-		      exit 1
-		      ;;
-	      esac
-	      
+                  echo "$BURNSOURCE does not exist."
+                  echo "Exiting."
+                  exit 1
+              fi
+          
+              case $BURNTYPE in
+              cdrdao)
+                  # Audio / single wav burn command
+                  if ! cdrdao show-toc "$BURNSOURCE" &> /dev/null
+                      then
+                      echo "$BURNSOURCE is not a valid TOC or cue file."
+                      echo "Exiting."
+                      exit 1
+                  fi
+                  date +"%Y-%m-%d %H:%M:%S" >> .multiburn/writer-$BURNNUM.log
+                  cdrdao write --speed $SPEED --overburn -n --eject \
+                      --device "$BURNBURNER" \
+                      "$BURNSOURCE" &>> .multiburn/writer-$BURNNUM.log
+                  RESULT="$?"
+                  date +"%Y-%m-%d %H:%M:%S" >> .multiburn/writer-$BURNNUM.log
+                  ;;
+              wodim)
+                  # Data (all) burn command
+                  date +"%Y-%m-%d %H:%M:%S" >> .multiburn/writer-$BURNNUM.log
+                  wodim -dao --eject --speed $SPEED --gracetime=2 driveropts=burnfree dev="$BURNBURNER" \
+                      --data "$BURNSOURCE" &>> .multiburn/writer-$BURNNUM.log
+                  RESULT="$?"
+                  date +"%Y-%m-%d %H:%M:%S" >> .multiburn/writer-$BURNNUM.log
+                  ;;
+              *)
+                  # If we get here, it's my fault. E-mail me.
+                  echo "Serious error. Exiting."
+                  exit 1
+                  ;;
+              esac
+          
               # Result of burn
-	      if [ $RESULT == 0 ]
-		  then
-		  echo "Brennen erfolgreich in $BURNBURNER."
-		  echo "Beschreibbare CD in $BURNBURNER einlegen."
-	      else
-		  echo "FEHLER in $BURNBURNER:"
-		  echo "Die CD in $BURNBURNER wurde NICHT korrekt gebrannt!"
-		  wodim --eject dev="$BURNBURNER" &> /dev/null
-	      fi
-	  else
-          # Disk wasn't blank or the status check command returned 'ready' erroneously
-	      wodim --eject dev="$BURNBURNER" &> /dev/null
-		  echo "FEHLER in $BURNBURNER:"
-		  echo "Die CD in $BURNBURNER ist nicht leer!"
-	      sleep 2
-	  fi
+              if [ $RESULT == 0 ]
+                  then
+                  echo "Brennen erfolgreich in $BURNBURNER."
+                  echo "Beschreibbare CD in $BURNBURNER einlegen."
+              else
+                  echo "FEHLER in $BURNBURNER:"
+                  echo "Die CD in $BURNBURNER wurde NICHT korrekt gebrannt!"
+                  wodim --eject dev="$BURNBURNER" &> /dev/null
+              fi
+#          else
+#              # Disk wasn't blank or the status check command returned 'ready' erroneously
+#              wodim --eject dev="$BURNBURNER" &> /dev/null
+#              echo "FEHLER in $BURNBURNER:"
+#              echo "Die CD in $BURNBURNER ist nicht leer!"
+#              sleep 2
+#          fi
       fi
       
       sleep 2
@@ -505,22 +513,28 @@ if ! which wodim &> /dev/null
     exit 1
 fi
 
+# on CTRL-C: Kill subshells, remove scratch directory, then exit
+trap "pkill -P $$ &> /dev/null; rm -rf .multiburn/; exit 0" SIGINT
+
 # Do preperation
 case $TYPE in
     audioDir)
-	audioDirPrep "$SOURCE";;
+        audioDirPrep "$SOURCE"
+        ;;
 
     data)
-	dataPrep "$SOURCE";;
+        dataPrep "$SOURCE"
+        ;;
 
     singleAudio)
-	singleAudioPrep "$SOURCE" "$PART";;
+        singleAudioPrep "$SOURCE" "$PART"
+        ;;
 
     *)
-     # If we get here, it's my fault. E-mail me.
-	echo "Serious error. Exiting."
-	exit 1
-	;;
+        # If we get here, it's my fault. E-mail me.
+        echo "Serious error. Exiting."
+        exit 1
+        ;;
 esac
 
 # Start burner loops
@@ -532,10 +546,6 @@ for BURNER in "$@"
       burn "$BURNER" $TYPE "$SOURCE" $LOOPCOUNT &
   fi
 done
-
-
-# Kill subshells, remove scratch directory then exit
-trap "pkill -P $$ &> /dev/null; rm -rf .multiburn/; exit 0" SIGINT
 
 # relax
 wait
