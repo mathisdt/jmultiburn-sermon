@@ -17,7 +17,7 @@
 # Any questions at all, email me at: davidstark (at) myrealbox (.) com
 
 # version was 1.44 originally
-VERSION=2.01
+VERSION=2.02
 
 
 #------------------------------------------------------------------------------------------------------
@@ -80,6 +80,11 @@ if [ $TYPE == "check" ]
     if ! which wavsplit &> /dev/null
         then
         NEEDED_AUDIO="- wavsplit\n$NEEDED_AUDIO"
+        OK_AUDIO=false
+    fi
+    if ! which sox &> /dev/null
+        then
+        NEEDED_AUDIO="- sox\n$NEEDED_AUDIO"
         OK_AUDIO=false
     fi
     if ! which bc &> /dev/null
@@ -181,8 +186,19 @@ singleAudioPrep()
         then
         # split wave file to five-minute-slices - assume maximum length of two hours
         wavsplit --seconds "$1" 300 600 900 1200 1500 1800 2100 2400 2700 3000 3300 3600 3900 4200 4500 4800 5100 5400 5700 6000 6300 6600 6900 7200 >/dev/null 2>&1
-        # and generate the TOC
         splitdir=$(echo $1 | sed -e 's#\.wav$##')
+        # re-append the last file if it has less than 10 seconds
+        last_file=$(ls $splitdir | tail -n 1)
+        last_file_length=$(sox "$splitdir/$last_file" -n stat 2>&1 | sed -n 's#^Length (seconds):[^0-9]*\([0-9]*\)\..*$#\1#p')
+		if [ $last_file_length -lt 10 ]; then
+			echo "Letzter Track wird wieder angefügt, weil er weniger als 10 Sekunden lang wäre."
+			to_merge_with=$(ls $splitdir | tail -n 2 | head -n 1)
+			merged=$(mktemp XXXXXXXX.wav)
+            sox "$splitdir/$to_merge_with" "$splitdir/$last_file" "$merged" >/dev/null 2>&1 && \
+            rm "$splitdir/$last_file" && \
+            mv "$merged" "$splitdir/$to_merge_with"
+		fi
+        # and generate the TOC
         splitcount=$(ls $splitdir | wc -l)
         echo "Audiodatei in $splitcount Tracks zu je 5 Minuten aufgeteilt."
         for splitfile in $splitdir/*.wav; do
@@ -218,8 +234,18 @@ singleAudioPrep()
             then
             # split wave file to five-minute-slices - assume maximum length of two hours
             wavsplit --seconds "$OUTFILE" 300 600 900 1200 1500 1800 2100 2400 2700 3000 3300 3600 3900 4200 4500 4800 5100 5400 5700 6000 6300 6600 6900 7200 >/dev/null 2>&1
-            # and generate the TOC
             splitdir=$(echo $OUTFILE | sed -e 's#\.wav$##')
+            last_file=$(ls $splitdir | tail -n 1)
+            last_file_length=$(sox "$splitdir/$last_file" -n stat 2>&1 | sed -n 's#^Length (seconds):[^0-9]*\([0-9]*\)\..*$#\1#p')
+            if [ $last_file_length -lt 10 ]; then
+            	echo "Letzter Track wird wieder angefügt, weil er weniger als 10 Sekunden lang wäre."
+            	to_merge_with=$(ls $splitdir | tail -n 2 | head -n 1)
+            	merged=$(mktemp XXXXXXXX.wav)
+            	sox "$splitdir/$to_merge_with" "$splitdir/$last_file" "$merged" >/dev/null 2>&1 && \
+            	rm "$splitdir/$last_file" && \
+            	mv "$merged" "$splitdir/$to_merge_with"
+            fi
+            # and generate the TOC
             splitcount=$(ls $splitdir | wc -l)
             echo "Audiodatei in $splitcount Tracks zu je 5 Minuten aufgeteilt."
             for splitfile in $splitdir/*.wav; do
