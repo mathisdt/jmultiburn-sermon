@@ -1,3 +1,4 @@
+package org.zephyrsoft.jmultiburn.sermon;
 class Start
 {
 

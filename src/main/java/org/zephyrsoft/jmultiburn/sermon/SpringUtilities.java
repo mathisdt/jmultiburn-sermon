@@ -1,3 +1,4 @@
+package org.zephyrsoft.jmultiburn.sermon;
 import java.awt.Component;
 import java.awt.Container;
 import javax.swing.Spring;
