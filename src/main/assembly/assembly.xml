@@ -11,6 +11,15 @@
 
 	<fileSets>
 		<fileSet>
+            <directory>${project.build.directory}/distribution</directory>
+            <outputDirectory></outputDirectory>
+            <includes>
+                <include>**/*.sh</include>
+                <include>**/multiburn-sermon</include>
+            </includes>
+            <fileMode>0755</fileMode>
+        </fileSet>
+		<fileSet>
 			<directory>${project.build.directory}/distribution</directory>
 			<outputDirectory></outputDirectory>
 			<includes>
