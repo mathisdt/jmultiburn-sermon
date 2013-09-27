@@ -11,6 +11,8 @@ import java.util.Properties;
  */
 public class DB {
 	
+	public static final String BASE_DIR_PROPERTY = "base.dir";
+	
 	// singleton
 	private static final DB _instance = new DB();
 	
@@ -18,17 +20,20 @@ public class DB {
 	
 	private DB() {
 		properties = new Properties();
-		String fileName = System.getProperty("base.dir", "..") + "/local.properties";
+		String fileName = System.getProperty(BASE_DIR_PROPERTY) + "/local.properties";
 		try {
 			properties.load(new FileInputStream(fileName));
 		} catch (Exception e) {
 			throw new RuntimeException("error while reading " + fileName, e);
 		}
-		
 	}
 	
 	private static DB getInstance() {
 		return _instance;
+	}
+	
+	public static String getBaseDir() {
+		return System.getProperty(BASE_DIR_PROPERTY);
 	}
 	
 	private static String getString(String key) {

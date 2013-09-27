@@ -1,44 +1,38 @@
 package org.zephyrsoft.jmultiburn.sermon;
-import java.awt.Container;
-import java.awt.Dimension;
+
 import java.awt.Point;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
-import javax.swing.ImageIcon;
-import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.JViewport;
 
 class BurnMonitor implements Runnable {
-	JTextArea displayArea;
-	JScrollPane scroller;
-	Process burnProc;
+	private JTextArea displayArea;
+	private JScrollPane scroller;
+	private Process burnProcess;
 	private BurnWindow burnWindow;
 	
-	BurnMonitor(javax.swing.JTextArea j1, javax.swing.JScrollPane j2, Process p3) {
-		Thread t4;
-		burnProc = p3;
-		scroller = j2;
-		displayArea = j1;
-		t4 = new Thread(this, "Std Out Monitoring Thread");
-		t4.start();
+	BurnMonitor(JTextArea displayArea, JScrollPane scroller, Process process) {
+		this.burnProcess = process;
+		this.scroller = scroller;
+		this.displayArea = displayArea;
+		Thread thread = new Thread(this, "Std Out Monitoring Thread");
+		thread.start();
 	}
 	
+	@Override
 	public void run() {
-		BufferedReader b1;
-		String s3;
-		b1 = new java.io.BufferedReader(new java.io.InputStreamReader(burnProc.getInputStream()));
+		BufferedReader reader;
+		reader = new BufferedReader(new InputStreamReader(burnProcess.getInputStream()));
 		burnWindow = (BurnWindow) displayArea.getTopLevelAncestor();
+		String line;
 		try {
-			while ((s3 = b1.readLine()) != null) {
-				displayArea.append(s3);
+			while ((line = reader.readLine()) != null) {
+				displayArea.append(line);
 				displayArea.append("\n");
 				scroller.getViewport().setViewPosition(
-					new java.awt.Point(0, displayArea.getSize().height - scroller.getSize().height));
+					new Point(0, displayArea.getSize().height - scroller.getSize().height));
 			}
 			if (((BurnWindow) displayArea.getTopLevelAncestor()).getUserQuitState() == false) {
 				displayArea.append("\n\n");

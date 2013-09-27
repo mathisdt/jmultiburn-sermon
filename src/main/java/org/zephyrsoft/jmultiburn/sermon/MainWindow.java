@@ -1,4 +1,5 @@
 package org.zephyrsoft.jmultiburn.sermon;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -12,9 +13,9 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -24,7 +25,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SpringLayout;
 
-public class SermonSelector extends JFrame implements ActionListener {
+public class MainWindow extends JFrame implements ActionListener {
 	
 	private static final long serialVersionUID = -4438912327573399733L;
 	
@@ -33,11 +34,11 @@ public class SermonSelector extends JFrame implements ActionListener {
 	private static String SEPARATOR = "|";
 	
 	private JPanel liste = null;
-	private Vector<Object> buttons = null;
+	private List<Object> buttons = null;
 	
 	private BurnWindow burnWindow = null;
 	
-	public SermonSelector() {
+	public MainWindow() {
 		super("Predigten brennen");
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		this.addWindowListener(new WindowAdapter() {
@@ -51,15 +52,14 @@ public class SermonSelector extends JFrame implements ActionListener {
 		File[] files = dir.listFiles();
 		int fileListLength = files.length;
 		liste = new JPanel(new SpringLayout());
-		buttons = new Vector<Object>();
+		buttons = new LinkedList<Object>();
 		
 		if (files == null || fileListLength == 0) {
 			liste.add(new JLabel("Keine MP3s zum Brennen vorhanden!"));
 		} else {
 			Arrays.sort(files);
-			Vector<Object> filevector = new Vector<Object>(Arrays.asList(files));
-			for (int i = 0; i < filevector.size(); i++) {
-				File file = (File) filevector.elementAt(i);
+			for (int i = 0; i < files.length; i++) {
+				File file = files[i];
 				// pro Predigt:
 				int trennung = file.getName().lastIndexOf("-");
 				if (trennung < 0) {
@@ -171,7 +171,7 @@ public class SermonSelector extends JFrame implements ActionListener {
 		// System.out.println("Predigt: " + ae.getActionCommand());
 		// Buttons setzen
 		for (int i = 0; i < buttons.size(); i++) {
-			JButton button = (JButton) buttons.elementAt(i);
+			JButton button = (JButton) buttons.get(i);
 			if (ae.getSource() == button) {
 				button.setBackground(Color.green);
 			}
@@ -191,7 +191,7 @@ public class SermonSelector extends JFrame implements ActionListener {
 	
 	public void closeBurnWindow() {
 		for (int i = 0; i < buttons.size(); i++) {
-			JButton button = (JButton) buttons.elementAt(i);
+			JButton button = (JButton) buttons.get(i);
 			button.setBackground(Color.WHITE);
 			button.setEnabled(true);
 		}
