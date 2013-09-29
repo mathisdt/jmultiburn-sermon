@@ -6,14 +6,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import org.zephyrsoft.jmultiburn.sermon.ui.BurnWindow;
 
-class BurnMonitor implements Runnable {
+public class BurnMonitor implements Runnable {
 	private JTextArea displayArea;
 	private JScrollPane scroller;
 	private Process burnProcess;
 	private BurnWindow burnWindow;
 	
-	BurnMonitor(JTextArea displayArea, JScrollPane scroller, Process process) {
+	public BurnMonitor(JTextArea displayArea, JScrollPane scroller, Process process) {
 		this.burnProcess = process;
 		this.scroller = scroller;
 		this.displayArea = displayArea;

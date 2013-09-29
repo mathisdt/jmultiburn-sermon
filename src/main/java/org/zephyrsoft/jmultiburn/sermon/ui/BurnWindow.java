@@ -1,4 +1,4 @@
-package org.zephyrsoft.jmultiburn.sermon;
+package org.zephyrsoft.jmultiburn.sermon.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
@@ -19,8 +19,10 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import org.zephyrsoft.jmultiburn.sermon.BurnMonitor;
+import org.zephyrsoft.jmultiburn.sermon.DB;
 
-class BurnWindow extends JFrame implements ActionListener {
+public class BurnWindow extends JFrame implements ActionListener {
 	private static final long serialVersionUID = 1L;
 	private JScrollPane burnDispScrl;
 	private JTextArea burnDisplay;
@@ -30,7 +32,7 @@ class BurnWindow extends JFrame implements ActionListener {
 	protected static final String MULTIBURN_PATH = DB.getBaseDir() + File.separator + "shell" + File.separator
 		+ "multiburn-sermon";
 	
-	BurnWindow(String multiburnParameter, String fileToBurn, String part, String[] burnDevices, MainWindow parent) {
+	public BurnWindow(String multiburnParameter, String fileToBurn, String part, String[] burnDevices, MainWindow parent) {
 		this.parent = parent;
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		this.addWindowListener(new WindowAdapter() {

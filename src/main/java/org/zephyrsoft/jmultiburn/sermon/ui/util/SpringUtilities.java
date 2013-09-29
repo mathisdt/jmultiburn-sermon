@@ -1,4 +1,4 @@
-package org.zephyrsoft.jmultiburn.sermon;
+package org.zephyrsoft.jmultiburn.sermon.ui.util;
 
 import java.awt.Component;
 import java.awt.Container;

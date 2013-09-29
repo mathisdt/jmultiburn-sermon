@@ -1,4 +1,4 @@
-package org.zephyrsoft.jmultiburn.sermon;
+package org.zephyrsoft.jmultiburn.sermon.ui;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -24,6 +24,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SpringLayout;
+import org.zephyrsoft.jmultiburn.sermon.DB;
+import org.zephyrsoft.jmultiburn.sermon.ui.util.SpringUtilities;
 
 public class MainWindow extends JFrame implements ActionListener {
 	

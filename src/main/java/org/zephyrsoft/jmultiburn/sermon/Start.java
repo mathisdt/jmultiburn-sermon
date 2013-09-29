@@ -2,8 +2,9 @@ package org.zephyrsoft.jmultiburn.sermon;
 
 import static org.zephyrsoft.jmultiburn.sermon.DB.BASE_DIR_PROPERTY;
 import java.io.File;
+import org.zephyrsoft.jmultiburn.sermon.ui.MainWindow;
 
-class Start {
+public class Start {
 	
 	public static void main(String[] args) {
 		// check base directory
