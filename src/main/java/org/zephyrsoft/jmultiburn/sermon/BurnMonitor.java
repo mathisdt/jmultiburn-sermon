@@ -4,6 +4,7 @@ import java.awt.Point;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import org.zephyrsoft.jmultiburn.sermon.ui.BurnWindow;
@@ -39,7 +40,8 @@ public class BurnMonitor implements Runnable {
 				displayArea.append("\n\n");
 				displayArea.append("----- multiburn has exited. -----");
 				javax.swing.JOptionPane.showMessageDialog(displayArea,
-					"multiburn has exited.\nPlease check the 'Messages' window\nfor error messages.", "Error", 0);
+					"multiburn has exited.\nPlease check the 'Messages' window\nfor error messages.", "Error",
+					JOptionPane.ERROR_MESSAGE);
 			}
 		} catch (IOException i2) {
 			System.out.println("Error: An error has ocurred while monitoring multiburn.");

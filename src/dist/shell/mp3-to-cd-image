@@ -1,0 +1,181 @@
+#!/bin/bash
+
+###################################
+######### START FUNCTIONS #########
+###################################
+
+create-specific-part () {
+	if [ $# -ne 1 ]; then
+		echo "argument problem: part number (0 = whole file, 1 = 1st part etc.) is required"
+		exit 1
+	fi
+	
+	PART="$1"
+	
+	if ! [ $PART -ge 0 -a $PART -le 10 ]; then
+		echo "Part $PART is invalid."
+		exit 1
+	fi
+	
+	WORKDIR=$TARGET/$SOURCE_NAME-$PART
+	
+	if [ -e "$WORKDIR" ]; then
+		echo "Specific target directory $WORKDIR already exists."
+		exit 1
+	fi
+	
+	mkdir "$WORKDIR"
+	
+	if ! echo "CD_DA" > "$WORKDIR/cd.toc"; then
+		echo "Could not create TOC file $WORKDIR/cd.toc"
+		exit 1
+	fi
+	
+	# now re-encode:
+	INFILE=$(echo "$SOURCE" | sed s://*:/:g)
+	OUTFILE="$WORKDIR/audio.wav"
+	echo "Source file: $SOURCE"
+	# test if we need to cut out a special part of the wave file:
+	WAVEPART=$(echo "1*0$PART"|bc)
+	PARTOPTIONS=""
+	if [[ $WAVEPART > 0 ]]; then
+		echo "Working on part $WAVEPART of the file."
+		# a "part" is defined as an audio segment of max. 78 minutes = 4680 seconds
+		STARTPOS=$(echo "($WAVEPART-1)*4680"|bc)
+		PARTOPTIONS="-ss $STARTPOS -endpos 4680"
+	else
+		echo "Using the complete file."
+	fi
+	echo -n "Convert source audio file... "
+	mplayer -vc null -vo null -srate 44100 -af channels=2,format=s16le -ao pcm:file="$OUTFILE" $PARTOPTIONS "$INFILE" >/dev/null 2>&1
+	echo "done."
+	# mplayer doesn't return proper error codes, so need to test output file.
+	if file -L "$OUTFILE" | grep RIFF | grep PCM | grep "16 bit" | grep stereo | grep 44100 &> /dev/null
+		then
+		# split wave file to five-minute-slices
+		SPLITDIR=$(echo $OUTFILE | sed -e 's#\.wav$##')
+		mkdir "$SPLITDIR"
+		SPLITFILES=$SPLITDIR/track-%2n.wav
+		echo -n "Split audio into tracks of 5 minutes each... "
+		sox "$OUTFILE" "$SPLITFILES" trim 0 300 : newfile : restart >/dev/null 2>&1
+		echo "done."
+		# re-append the last file if it has less than 10 seconds
+		LAST_FILE=$(ls "$SPLITDIR" | tail -n 1)
+		LAST_FILE_LENGTH=$(sox "$SPLITDIR/$LAST_FILE" -n stat 2>&1 | sed -n 's#^Length (seconds):[^0-9]*\([0-9]*\)\..*$#\1#p')
+		if [ $LAST_FILE_LENGTH -lt 10 ]; then
+			TO_MERGE_WITH=$(ls "$SPLITDIR" | tail -n 2 | head -n 1)
+			MERGED=$(mktemp XXXXXXXX.wav)
+			echo -n "Re-append last track because it would have less than 10 seconds... "
+			sox "$SPLITDIR/$TO_MERGE_WITH" "$SPLITDIR/$LAST_FILE" "$MERGED" >/dev/null 2>&1 && \
+				rm "$SPLITDIR/$LAST_FILE" && \
+				mv "$MERGED" "$SPLITDIR/$TO_MERGE_WITH" && \
+				echo "done."
+		fi
+		# and generate the TOC
+		SPLITCOUNT=$(ls "$SPLITDIR" | wc -l)
+		echo "File was split into $SPLITCOUNT tracks."
+		for FILE in $SPLITDIR/*.wav; do
+			echo "TRACK AUDIO AUDIOFILE "\""$FILE"\"" 0" >> "$WORKDIR/cd.toc"
+		done
+	else
+		echo "$OUTFILE did not re-encode:"
+		echo "Source file may not be playable by mplayer."
+		exit 1
+	fi
+	rm "$OUTFILE"
+	
+	if ! grep TRACK "$WORKDIR/cd.toc" &> /dev/null
+	then
+		# no tracks made it into the toc
+		echo "No tracks!"
+		exit 1
+	fi
+	
+	# tell the user the length of the CD
+	echo "Length will be "$(cdrdao show-toc "$WORKDIR/cd.toc" 2> /dev/null | grep END | tail -n 1 | awk '{ print $2 }' | cut -d '(' -f 1 |sed -e "s/:[[:digit:]]*$//")" (min:sec)."
+	
+	if ! cdrdao show-toc "$WORKDIR/cd.toc" &> /dev/null
+		then
+			echo "$WORKDIR/cd.toc is not valid."
+			exit 1
+	fi
+	
+	echo ""
+	echo "You can now write the part on CD, e.g. using one of the following commands:"
+	echo "cdrdao write --device /dev/sr0 --speed 16 --overburn -n --eject $WORKDIR/cd.toc"
+	echo "wodim dev=/dev/sr0 speed=16 -dao -eject -overburn -pad gracetime=2 driveropts=burnfree -audio $SPLITDIR/*.wav"
+	echo ""
+}
+
+###################################
+########## END FUNCTIONS ##########
+###################################
+
+
+if ! which mp3info &> /dev/null
+	then
+	echo "mp3info is not available."
+	exit 1
+fi
+if ! which mplayer &> /dev/null
+	then
+	echo "mplayer is not available."
+	exit 1
+fi
+if ! which sox &> /dev/null
+	then
+	echo "sox is not available."
+	exit 1
+fi
+if ! which cdrdao &> /dev/null
+	then
+	echo "cdrdao is not available."
+	exit 1
+fi
+if ! which bc &> /dev/null
+	then
+	echo "bc is not available."
+	exit 1
+fi
+
+if [ $# -ne 2 ]; then
+	echo "Argument problem. Necessary arguments:"
+	echo "   1. source audio file"
+	echo "   2. global target directory (must exist)"
+	exit 1
+fi
+
+SOURCE="$1"
+TARGET="$2"
+
+if ! [ -e "$SOURCE" ]; then
+	echo "Source file $SOURCE does not exist."
+	exit 1
+fi
+
+SOURCE_NAME=$(echo $SOURCE | sed -e 's#^.*/##g' -e 's#\.mp3$##' -e 's#-[^-]*kbps$##')
+
+if ! [ -e "$TARGET" ]; then
+	echo "Global target directory $TARGET does not exist."
+	exit 1
+fi
+
+# TODO handle edge cases:
+#   78:00 (= 4680 secs) through 78:10 (= 4690 secs) should still be one part only (because a track shorter than 10 seconds makes no sense)
+
+SOURCE_TIME=$(mp3info -p "%m:%s\n" "$SOURCE")
+SOURCE_MINUTES=$(mp3info -p "%m\n" "$SOURCE")
+MAX_PART_MINUTES=78
+PART_COUNT=$(echo "( $SOURCE_MINUTES / $MAX_PART_MINUTES ) + 1" | bc)
+
+echo "$SOURCE_NAME: length is $SOURCE_TIME, max part length is $MAX_PART_MINUTES:00 - this results in $PART_COUNT part(s)"
+
+if [ $PART_COUNT -eq 1 ]; then
+	echo "Creating the first and only part..."
+	create-specific-part 0
+else
+	for (( c=1; c<=$PART_COUNT; c++ )); do
+		echo "Creating part $c..."
+		create-specific-part $c
+	done
+fi

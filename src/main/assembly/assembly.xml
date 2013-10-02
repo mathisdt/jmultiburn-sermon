@@ -16,6 +16,7 @@
             <includes>
                 <include>**/*.sh</include>
                 <include>**/multiburn-sermon</include>
+                <include>**/mp3-to-cd-image</include>
             </includes>
             <fileMode>0755</fileMode>
         </fileSet>

@@ -25,6 +25,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SpringLayout;
 import org.zephyrsoft.jmultiburn.sermon.DB;
+import org.zephyrsoft.jmultiburn.sermon.SourceType;
 import org.zephyrsoft.jmultiburn.sermon.ui.util.SpringUtilities;
 
 public class MainWindow extends JFrame implements ActionListener {
@@ -184,10 +185,13 @@ public class MainWindow extends JFrame implements ActionListener {
 			StringTokenizer t = new StringTokenizer(ae.getActionCommand(), SEPARATOR);
 			String fileName = t.nextToken();
 			String part = t.nextToken();
-			burnWindow = new BurnWindow("-s", DB.getSermonsDir() + fileName, part, DB.getBurners(), this);
+			burnWindow =
+				new BurnWindow(SourceType.SINGLE_FILE, DB.getSermonsDir() + fileName, part, DB.getBurners(), this);
 		} else {
 			// keine mehrteilige Predigt: Part "0" heißt "Predigt nicht aufteilen"
-			burnWindow = new BurnWindow("-s", DB.getSermonsDir() + ae.getActionCommand(), "0", DB.getBurners(), this);
+			burnWindow =
+				new BurnWindow(SourceType.SINGLE_FILE, DB.getSermonsDir() + ae.getActionCommand(), "0",
+					DB.getBurners(), this);
 		}
 	}
 	

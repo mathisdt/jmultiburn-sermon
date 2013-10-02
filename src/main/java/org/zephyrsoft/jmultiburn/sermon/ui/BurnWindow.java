@@ -9,8 +9,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
@@ -21,6 +19,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import org.zephyrsoft.jmultiburn.sermon.BurnMonitor;
 import org.zephyrsoft.jmultiburn.sermon.DB;
+import org.zephyrsoft.jmultiburn.sermon.MultiBurnCommand;
+import org.zephyrsoft.jmultiburn.sermon.SourceType;
 
 public class BurnWindow extends JFrame implements ActionListener {
 	private static final long serialVersionUID = 1L;
@@ -29,10 +29,7 @@ public class BurnWindow extends JFrame implements ActionListener {
 	private boolean userQuit;
 	private MainWindow parent = null;
 	
-	protected static final String MULTIBURN_PATH = DB.getBaseDir() + File.separator + "shell" + File.separator
-		+ "multiburn-sermon";
-	
-	public BurnWindow(String multiburnParameter, String fileToBurn, String part, String[] burnDevices, MainWindow parent) {
+	public BurnWindow(SourceType sourceType, String source, String part, String[] burnDevices, MainWindow parent) {
 		this.parent = parent;
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		this.addWindowListener(new WindowAdapter() {
@@ -41,7 +38,6 @@ public class BurnWindow extends JFrame implements ActionListener {
 				exit();
 			}
 		});
-		List<String> multiburnCommandLine = new ArrayList<String>();
 		userQuit = false;
 		setTitle("Brennen...");
 		Container contentPane = getContentPane();
@@ -73,36 +69,36 @@ public class BurnWindow extends JFrame implements ActionListener {
 		pack();
 		setSize(getSize().width + 20, getSize().height + 30);
 		setResizable(false);
-		multiburnCommandLine.add(MULTIBURN_PATH);
-		multiburnCommandLine.add(multiburnParameter);
-		multiburnCommandLine.add(fileToBurn);
-		if (part == null || part.length() == 0) {
-			part = "0";
+		MultiBurnCommand command;
+		switch (sourceType) {
+			case SINGLE_FILE:
+				command = MultiBurnCommand.forBurnSingleFile(source, part, burnDevices);
+				break;
+			case DIRECTORY:
+				command = MultiBurnCommand.forBurnDirectory(source, burnDevices);
+				break;
+			default:
+				throw new IllegalArgumentException("unknown source type");
 		}
-		multiburnCommandLine.add(part);
-		for (String device : burnDevices) {
-			multiburnCommandLine.add(device);
-		}
-		runMultiburn(multiburnCommandLine);
+		runMultiburn(command);
 	}
 	
 	private Process multiburnProcess;
 	private File tempDir;
 	private BurnMonitor burnMonitor;
 	
-	private void runMultiburn(List<String> commandLine) {
+	private void runMultiburn(MultiBurnCommand command) {
 		try {
 			tempDir = new File(DB.getTempDir());
 			if (!tempDir.exists() || !tempDir.canWrite()) {
 				// temporäres Verzeichnis ist kaputt, also lieber das aktuelle Verzeichnis nehmen
 				tempDir = null;
 			}
-			String[] commandLineArray = commandLine.toArray(new String[0]);
-			multiburnProcess = Runtime.getRuntime().exec(commandLineArray, null, tempDir);
+			multiburnProcess = Runtime.getRuntime().exec(command.toArray(), null, tempDir);
 			burnMonitor = new BurnMonitor(burnDisplay, burnDispScrl, multiburnProcess);
 			setVisible(true);
 		} catch (IOException i1) {
-			JOptionPane.showMessageDialog(this, "Could not run " + MULTIBURN_PATH + "!", "Error", 0);
+			JOptionPane.showMessageDialog(this, "Could not run multiburn!", "Error", JOptionPane.ERROR_MESSAGE);
 			dispose();
 		}
 	}
@@ -132,13 +128,14 @@ public class BurnWindow extends JFrame implements ActionListener {
 				// ursprünglichen Prozess zerstören
 				multiburnProcess.destroy();
 				// alle Forks zerstören, die der Prozess selbst initiiert hat
-				Runtime.getRuntime().exec("killall -9 " + MULTIBURN_PATH);
+				Runtime.getRuntime().exec(MultiBurnCommand.forKillMultiBurn().toArray());
 				// die temporären Dateien löschen, sonst läuft die Platte voll
 				Runtime.getRuntime().exec(
 					"rm -rf " + (tempDir == null ? "" : tempDir.getAbsolutePath() + File.separator) + ".multiburn");
 			} catch (IOException i8) {
-				JOptionPane.showMessageDialog(this, "Could not kill " + MULTIBURN_PATH + "\nPlease run 'killall -9 "
-					+ MULTIBURN_PATH + "'", "Error", 0);
+				JOptionPane.showMessageDialog(this,
+					"Could not kill multiburn\nPlease run 'killall -9 multiburn' yourself", "Error",
+					JOptionPane.ERROR_MESSAGE);
 			}
 			parent.closeBurnWindow();
 		}
