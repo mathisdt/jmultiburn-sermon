@@ -31,11 +31,11 @@ create-specific-part () {
 		exit 1
 	fi
 	
-	# now re-encode:
+	# now re-encode
 	INFILE=$(echo "$SOURCE" | sed s://*:/:g)
 	OUTFILE="$WORKDIR/audio.wav"
 	echo "Source file: $SOURCE"
-	# test if we need to cut out a special part of the wave file:
+	# test if we need to cut out a special part of the wave file
 	WAVEPART=$(echo "1*0$PART"|bc)
 	PARTOPTIONS=""
 	if [[ $WAVEPART > 0 ]]; then
@@ -49,7 +49,7 @@ create-specific-part () {
 	echo -n "Convert source audio file... "
 	mplayer -vc null -vo null -srate 44100 -af channels=2,format=s16le -ao pcm:file="$OUTFILE" $PARTOPTIONS "$INFILE" >/dev/null 2>&1
 	echo "done."
-	# mplayer doesn't return proper error codes, so need to test output file.
+	# mplayer doesn't return proper error codes, so need to test output file
 	if file -L "$OUTFILE" | grep RIFF | grep PCM | grep "16 bit" | grep stereo | grep 44100 &> /dev/null
 		then
 		# split wave file to five-minute-slices
@@ -160,15 +160,16 @@ if ! [ -e "$TARGET" ]; then
 	exit 1
 fi
 
-# TODO handle edge cases:
-#   78:00 (= 4680 secs) through 78:10 (= 4690 secs) should still be one part only (because a track shorter than 10 seconds makes no sense)
-
 SOURCE_TIME=$(mp3info -p "%m:%s\n" "$SOURCE")
-SOURCE_MINUTES=$(mp3info -p "%m\n" "$SOURCE")
-MAX_PART_MINUTES=78
-PART_COUNT=$(echo "( $SOURCE_MINUTES / $MAX_PART_MINUTES ) + 1" | bc)
+SOURCE_SECONDS=$(mp3info -p "%S\n" "$SOURCE")
+PART_COUNT=1
+# up to 5 seconds at the end would be thrown away, but tracks below 5 seconds length are illegal anyway
+while [ $SOURCE_SECONDS -gt 4685 ]; do
+	PART_COUNT=$(echo "$PART_COUNT + 1" | bc)
+	SOURCE_SECONDS=$(echo "$SOURCE_SECONDS - 4680" | bc)
+done
 
-echo "$SOURCE_NAME: length is $SOURCE_TIME, max part length is $MAX_PART_MINUTES:00 - this results in $PART_COUNT part(s)"
+echo "$SOURCE_NAME: length is $SOURCE_TIME, max part length is 78 minutes - this results in $PART_COUNT part(s)"
 
 if [ $PART_COUNT -eq 1 ]; then
 	echo "Creating the first and only part..."
