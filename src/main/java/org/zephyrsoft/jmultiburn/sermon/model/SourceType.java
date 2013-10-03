@@ -1,4 +1,4 @@
-package org.zephyrsoft.jmultiburn.sermon;
+package org.zephyrsoft.jmultiburn.sermon.model;
 
 /**
  * Determines the type of audio source for burning.

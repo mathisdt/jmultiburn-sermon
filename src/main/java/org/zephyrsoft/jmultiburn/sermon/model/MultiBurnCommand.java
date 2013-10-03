@@ -1,8 +1,9 @@
-package org.zephyrsoft.jmultiburn.sermon;
+package org.zephyrsoft.jmultiburn.sermon.model;
 
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
+import org.zephyrsoft.jmultiburn.sermon.DB;
 
 /**
  * holds a system call related multiburn including its parameters

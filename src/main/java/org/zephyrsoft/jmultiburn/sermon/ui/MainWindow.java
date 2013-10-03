@@ -10,9 +10,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -25,7 +23,9 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SpringLayout;
 import org.zephyrsoft.jmultiburn.sermon.DB;
-import org.zephyrsoft.jmultiburn.sermon.SourceType;
+import org.zephyrsoft.jmultiburn.sermon.SermonProvider;
+import org.zephyrsoft.jmultiburn.sermon.model.Sermon;
+import org.zephyrsoft.jmultiburn.sermon.model.SourceType;
 import org.zephyrsoft.jmultiburn.sermon.ui.util.SpringUtilities;
 
 public class MainWindow extends JFrame implements ActionListener {
@@ -51,77 +51,41 @@ public class MainWindow extends JFrame implements ActionListener {
 			}
 		});
 		
-		File dir = new File(DB.getSermonsDir());
-		File[] files = dir.listFiles();
-		int fileListLength = files.length;
+		List<Sermon> sermons = SermonProvider.readSermons();
 		liste = new JPanel(new SpringLayout());
 		buttons = new LinkedList<Object>();
 		
-		if (files == null || fileListLength == 0) {
+		if (sermons == null || sermons.size() == 0) {
 			liste.add(new JLabel("Keine MP3s zum Brennen vorhanden!"));
 		} else {
-			Arrays.sort(files);
-			for (int i = 0; i < files.length; i++) {
-				File file = files[i];
-				// pro Predigt:
-				int trennung = file.getName().lastIndexOf("-");
-				if (trennung < 0) {
-					fileListLength--;
-					continue;
-				}
-				String vorname = file.getName().substring(0, trennung);
-				String rate = file.getName().substring(trennung + 1, file.getName().lastIndexOf("."));
-				String bettername;
-				String rest = vorname.substring(11);
-				if (rest.indexOf("-") > 0) {
-					bettername =
-						rest.substring(0, rest.indexOf("-")) + " (" + rest.substring(rest.indexOf("-") + 1) + ")";
-				} else {
-					bettername = rest;
-				}
-				bettername = replace(bettername, "_", " ");
-				bettername = replace(bettername, "fruehstueck", "frühstück");
-				bettername = replace(bettername, "Maenner", "Männer");
-				bettername = replace(bettername, "Joerg", "Jörg");
-				
-				// Länge in Minuten und Sekunden berechnen
-				double bitrate = Double.valueOf(rate.substring(0, 2));
-				double filesize = file.length();
-				double length = Math.floor(filesize / bitrate * 0.008);
-				double min = Math.floor(length / 60);
-				
-				JLabel datelabel =
-					new JLabel(vorname.substring(8, 10) + "." + vorname.substring(5, 7) + "." + vorname.substring(0, 4));
-				JLabel namelabel = new JLabel(bettername);
-				JLabel ratelabel = new JLabel("(" + rate + ")");
+			int i = 0;
+			for (Sermon sermon : sermons) {
+				JLabel datelabel = new JLabel(sermon.getDate());
+				JLabel namelabel = new JLabel(sermon.getName());
 				datelabel.setFont(new Font("sansserif", Font.BOLD, 14));
 				datelabel.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
 				namelabel.setFont(new Font("sansserif", Font.BOLD, 14));
 				namelabel.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
-				ratelabel.setFont(new Font("sansserif", Font.BOLD, 14));
-				ratelabel.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
 				
 				List<JButton> createdButtons = new ArrayList<JButton>();
-				if (min < CD_LENGTH) {
+				if (sermon.getParts() == 1) {
 					JButton button = new JButton("Brennen!");
-					button.setActionCommand(file.getName());
+					button.setActionCommand(sermon.getSource());
 					button.addActionListener(this);
 					button.setBackground(Color.WHITE);
 					button.setForeground(Color.BLACK);
 					buttons.add(button);
 					createdButtons.add(button);
 				} else {
-					// Spezialbehandlung für Predigten, die zu lang für eine CD sind
-					int count = 1;
-					while (min - ((count - 1) * CD_LENGTH) >= 0) {
+					// more than one CD
+					for (int count = 1; count <= sermon.getParts(); count++) {
 						JButton button = new JButton("CD " + count);
-						button.setActionCommand(file.getName() + SEPARATOR + count);
+						button.setActionCommand(sermon.getSource() + SEPARATOR + count);
 						button.addActionListener(this);
 						button.setBackground(Color.WHITE);
 						button.setForeground(Color.BLACK);
 						buttons.add(button);
 						createdButtons.add(button);
-						count++;
 					}
 				}
 				
@@ -142,11 +106,12 @@ public class MainWindow extends JFrame implements ActionListener {
 					namepanel.setBackground(Color.lightGray);
 					buttonpanel.setBackground(Color.lightGray);
 				}
+				i++;
 				liste.add(datepanel);
 				liste.add(namepanel);
 				liste.add(buttonpanel);
 			}
-			SpringUtilities.makeCompactGrid(liste, fileListLength, 3, // rows, cols
+			SpringUtilities.makeCompactGrid(liste, sermons.size(), 3, // rows, cols
 				0, 0, // initialX, initialY
 				0, 0);// xPad, yPad
 		}
@@ -185,13 +150,10 @@ public class MainWindow extends JFrame implements ActionListener {
 			StringTokenizer t = new StringTokenizer(ae.getActionCommand(), SEPARATOR);
 			String fileName = t.nextToken();
 			String part = t.nextToken();
-			burnWindow =
-				new BurnWindow(SourceType.SINGLE_FILE, DB.getSermonsDir() + fileName, part, DB.getBurners(), this);
+			burnWindow = new BurnWindow(SourceType.SINGLE_FILE, fileName, part, DB.getBurners(), this);
 		} else {
-			// keine mehrteilige Predigt: Part "0" heißt "Predigt nicht aufteilen"
-			burnWindow =
-				new BurnWindow(SourceType.SINGLE_FILE, DB.getSermonsDir() + ae.getActionCommand(), "0",
-					DB.getBurners(), this);
+			// only one part: part number 0 means "don't cut in parts"
+			burnWindow = new BurnWindow(SourceType.SINGLE_FILE, ae.getActionCommand(), "0", DB.getBurners(), this);
 		}
 	}
 	
@@ -204,16 +166,6 @@ public class MainWindow extends JFrame implements ActionListener {
 		burnWindow.setVisible(false);
 		burnWindow.dispose();
 		burnWindow = null;
-	}
-	
-	public static String replace(String in, String toreplace, String replacewith) {
-		String ret = new String(in.toString());
-		while (ret.indexOf(toreplace) >= 0) {
-			ret =
-				ret.substring(0, ret.indexOf(toreplace)) + replacewith
-					+ ret.substring(ret.indexOf(toreplace) + toreplace.length());
-		}
-		return ret;
 	}
 	
 }

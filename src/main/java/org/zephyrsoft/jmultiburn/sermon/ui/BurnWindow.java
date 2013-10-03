@@ -19,8 +19,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import org.zephyrsoft.jmultiburn.sermon.BurnMonitor;
 import org.zephyrsoft.jmultiburn.sermon.DB;
-import org.zephyrsoft.jmultiburn.sermon.MultiBurnCommand;
-import org.zephyrsoft.jmultiburn.sermon.SourceType;
+import org.zephyrsoft.jmultiburn.sermon.model.MultiBurnCommand;
+import org.zephyrsoft.jmultiburn.sermon.model.SourceType;
 
 public class BurnWindow extends JFrame implements ActionListener {
 	private static final long serialVersionUID = 1L;
