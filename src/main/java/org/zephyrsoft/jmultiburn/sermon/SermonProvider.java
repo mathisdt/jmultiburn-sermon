@@ -4,7 +4,11 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import com.google.common.annotations.VisibleForTesting;
 import org.zephyrsoft.jmultiburn.sermon.model.Sermon;
+import org.zephyrsoft.jmultiburn.sermon.model.SermonPart;
 import org.zephyrsoft.jmultiburn.sermon.model.SourceType;
 
 /**
@@ -12,71 +16,127 @@ import org.zephyrsoft.jmultiburn.sermon.model.SourceType;
  */
 public class SermonProvider {
 	
+	/** expected pattern for sermons stored as MP3 files */
+	@VisibleForTesting
+	protected static final Pattern FILE_PATTERN =
+		Pattern
+			.compile("^(?<year>\\d{4})-(?<month>\\d{2})-(?<day>\\d{2})-(?<name>[^-]+)(?:-(?<speaker>[^-]+))?-(?<bitrate>\\d{1,3})kbps\\.mp3$");
+	
+	/** expected pattern for sermons stored in directories */
+	@VisibleForTesting
+	protected static final Pattern DIRECTORY_PATTERN =
+		Pattern
+			.compile("^(?<year>\\d{4})-(?<month>\\d{2})-(?<day>\\d{2})-(?<name>[^-]+)(?:-(?<speaker>[^-]+))?-(?<part>\\d{1,2})$");
+	
 	public static List<Sermon> readSermons() {
 		List<Sermon> result = new LinkedList<>();
 		
 		File dir = new File(DB.getSermonsDir());
 		File[] files = dir.listFiles();
-		int fileListLength = files.length;
 		
-		if (files != null && fileListLength > 0) {
+		if (files != null) {
 			Arrays.sort(files);
-			for (int i = 0; i < files.length; i++) {
-				File file = files[i];
-				int separation = file.getName().lastIndexOf("-");
-				if (separation < 0) {
-					fileListLength--;
-					continue;
-				}
-				String vorname = file.getName().substring(0, separation);
-				String rate = file.getName().substring(separation + 1, file.getName().lastIndexOf("."));
-				String bettername;
-				String rest = vorname.substring(11);
-				if (rest.indexOf("-") > 0) {
-					bettername =
-						rest.substring(0, rest.indexOf("-")) + " (" + rest.substring(rest.indexOf("-") + 1) + ")";
-				} else {
-					bettername = rest;
-				}
-				bettername = replace(bettername, "_", " ");
-				bettername = replace(bettername, "fruehstueck", "frühstück");
-				bettername = replace(bettername, "Maenner", "Männer");
-				bettername = replace(bettername, "Joerg", "Jörg");
+			Sermon previousSermon = null;
+			for (File file : files) {
+				String date = null;
+				String name = null;
+				String speaker = null;
+				Integer bitrate = null;
+				Integer part = null;
 				
-				// calculate length
-				double bitrate = Double.valueOf(rate.substring(0, 2));
-				double filesize = file.length();
-				double lengthInSeconds = Math.floor(filesize / bitrate * 0.008);
-				
-				int partCount = 1;
-				// up to 5 seconds at the end would be thrown away, but tracks below 5 seconds length are illegal anyway
-				while (lengthInSeconds > 4685) {
-					partCount++;
-					lengthInSeconds -= 4680;
+				// decide what to do with this entry
+				if (file.isFile()) {
+					Matcher fileMatcher = FILE_PATTERN.matcher(file.getName());
+					if (fileMatcher.matches()) {
+						date =
+							fileMatcher.group("day") + "." + fileMatcher.group("month") + "."
+								+ fileMatcher.group("year");
+						name = fileMatcher.group("name");
+						speaker = fileMatcher.group("speaker");
+						bitrate = Integer.valueOf(fileMatcher.group("bitrate"));
+						
+						String composedName = name;
+						if (speaker != null && !speaker.isEmpty()) {
+							composedName = name + " (" + speaker + ")";
+						}
+						
+						// TODO use a map for replacements
+						composedName =
+							composedName.replaceAll("_", " ").replaceAll("fruehstueck", "frühstück")
+								.replaceAll("Maenner", "Männer").replaceAll("Joerg", "Jörg");
+						
+						Sermon sermon = new Sermon();
+						sermon.setDate(date);
+						sermon.setName(composedName);
+						sermon.setSourceType(SourceType.SINGLE_FILE);
+						
+						// calculate length
+						double filesize = file.length();
+						double lengthInSeconds = Math.floor(filesize / bitrate * 0.008);
+						
+						int partCount = 1;
+						// up to 5 seconds at the end would be thrown away, but tracks below 5 seconds length are
+						// illegal anyway
+						while (lengthInSeconds > 4685) {
+							partCount++;
+							lengthInSeconds -= 4680;
+						}
+						
+						// append all parts
+						for (int i = 1; i <= partCount; i++) {
+							SermonPart sermonPart = new SermonPart();
+							sermonPart.setIndex(i);
+							sermonPart.setSource(file.getAbsolutePath());
+							sermon.addPart(sermonPart);
+						}
+						
+						result.add(sermon);
+					}
+				} else if (file.isDirectory()) {
+					Matcher directoryMatcher = DIRECTORY_PATTERN.matcher(file.getName());
+					if (directoryMatcher.matches()) {
+						date =
+							directoryMatcher.group("day") + "." + directoryMatcher.group("month") + "."
+								+ directoryMatcher.group("year");
+						name = directoryMatcher.group("name");
+						speaker = directoryMatcher.group("speaker");
+						part = Integer.valueOf(directoryMatcher.group("part"));
+						
+						String composedName = name;
+						if (speaker != null && !speaker.isEmpty()) {
+							composedName = name + " (" + speaker + ")";
+						}
+						
+						// TODO use a map for replacements
+						composedName =
+							composedName.replaceAll("_", " ").replaceAll("fruehstueck", "frühstück")
+								.replaceAll("Maenner", "Männer").replaceAll("Joerg", "Jörg");
+						
+						Sermon sermon = new Sermon();
+						sermon.setDate(date);
+						sermon.setName(composedName);
+						sermon.setSourceType(SourceType.DIRECTORY);
+						
+						if (previousSermon != null && previousSermon.equals(sermon)) {
+							sermon = previousSermon;
+						} else {
+							// the sermon is new to the list
+							result.add(sermon);
+							previousSermon = sermon;
+						}
+						
+						// append this part
+						SermonPart sermonPart = new SermonPart();
+						sermonPart.setIndex(part);
+						sermonPart.setSource(file.getAbsolutePath() + File.separator + "audio");
+						sermon.addPart(sermonPart);
+						
+					}
 				}
-				
-				Sermon sermon = new Sermon();
-				sermon
-					.setDate(vorname.substring(8, 10) + "." + vorname.substring(5, 7) + "." + vorname.substring(0, 4));
-				sermon.setName(bettername);
-				sermon.setParts(partCount);
-				sermon.setSource(file.getAbsolutePath());
-				sermon.setSourceType(SourceType.SINGLE_FILE);
-				result.add(sermon);
 			}
 		}
 		
 		return result;
-	}
-	
-	private static String replace(String in, String toreplace, String replacewith) {
-		String ret = new String(in.toString());
-		while (ret.indexOf(toreplace) >= 0) {
-			ret =
-				ret.substring(0, ret.indexOf(toreplace)) + replacewith
-					+ ret.substring(ret.indexOf(toreplace) + toreplace.length());
-		}
-		return ret;
 	}
 	
 }

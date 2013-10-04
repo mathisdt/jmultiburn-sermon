@@ -6,14 +6,13 @@ import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.StringTokenizer;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -25,10 +24,10 @@ import javax.swing.SpringLayout;
 import org.zephyrsoft.jmultiburn.sermon.DB;
 import org.zephyrsoft.jmultiburn.sermon.SermonProvider;
 import org.zephyrsoft.jmultiburn.sermon.model.Sermon;
-import org.zephyrsoft.jmultiburn.sermon.model.SourceType;
+import org.zephyrsoft.jmultiburn.sermon.model.SermonPart;
 import org.zephyrsoft.jmultiburn.sermon.ui.util.SpringUtilities;
 
-public class MainWindow extends JFrame implements ActionListener {
+public class MainWindow extends JFrame {
 	
 	private static final long serialVersionUID = -4438912327573399733L;
 	
@@ -37,7 +36,7 @@ public class MainWindow extends JFrame implements ActionListener {
 	private static String SEPARATOR = "|";
 	
 	private JPanel liste = null;
-	private List<Object> buttons = null;
+	private List<JButton> buttons = null;
 	
 	private BurnWindow burnWindow = null;
 	
@@ -53,7 +52,7 @@ public class MainWindow extends JFrame implements ActionListener {
 		
 		List<Sermon> sermons = SermonProvider.readSermons();
 		liste = new JPanel(new SpringLayout());
-		buttons = new LinkedList<Object>();
+		buttons = new LinkedList<JButton>();
 		
 		if (sermons == null || sermons.size() == 0) {
 			liste.add(new JLabel("Keine MP3s zum Brennen vorhanden!"));
@@ -68,25 +67,24 @@ public class MainWindow extends JFrame implements ActionListener {
 				namelabel.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
 				
 				List<JButton> createdButtons = new ArrayList<JButton>();
-				if (sermon.getParts() == 1) {
-					JButton button = new JButton("Brennen!");
-					button.setActionCommand(sermon.getSource());
-					button.addActionListener(this);
+				for (SermonPart part : sermon) {
+					final JButton button;
+					if (sermon.getPartCount() == 1) {
+						button = new JButton("Brennen!");
+					} else {
+						button = new JButton("CD " + part.getIndex());
+					}
+					final SermonPart selectedSermonPart = part;
+					button.addMouseListener(new MouseAdapter() {
+						@Override
+						public void mouseClicked(MouseEvent e) {
+							startBurning(selectedSermonPart, button);
+						}
+					});
 					button.setBackground(Color.WHITE);
 					button.setForeground(Color.BLACK);
 					buttons.add(button);
 					createdButtons.add(button);
-				} else {
-					// more than one CD
-					for (int count = 1; count <= sermon.getParts(); count++) {
-						JButton button = new JButton("CD " + count);
-						button.setActionCommand(sermon.getSource() + SEPARATOR + count);
-						button.addActionListener(this);
-						button.setBackground(Color.WHITE);
-						button.setForeground(Color.BLACK);
-						buttons.add(button);
-						createdButtons.add(button);
-					}
 				}
 				
 				// Elemente hinzufügen
@@ -134,32 +132,21 @@ public class MainWindow extends JFrame implements ActionListener {
 		}
 	}
 	
-	@Override
-	public void actionPerformed(ActionEvent ae) {
-		// System.out.println("Predigt: " + ae.getActionCommand());
+	private void startBurning(SermonPart sermonPart, JButton clickedButton) {
 		// Buttons setzen
-		for (int i = 0; i < buttons.size(); i++) {
-			JButton button = (JButton) buttons.get(i);
-			if (ae.getSource() == button) {
+		for (JButton button : buttons) {
+			if (clickedButton == button) {
 				button.setBackground(Color.green);
 			}
 			button.setEnabled(false);
 		}
 		// jetzt Brennfenster öffnen
-		if (ae.getActionCommand().contains(SEPARATOR)) {
-			StringTokenizer t = new StringTokenizer(ae.getActionCommand(), SEPARATOR);
-			String fileName = t.nextToken();
-			String part = t.nextToken();
-			burnWindow = new BurnWindow(SourceType.SINGLE_FILE, fileName, part, DB.getBurners(), this);
-		} else {
-			// only one part: part number 0 means "don't cut in parts"
-			burnWindow = new BurnWindow(SourceType.SINGLE_FILE, ae.getActionCommand(), "0", DB.getBurners(), this);
-		}
+		burnWindow = new BurnWindow(sermonPart, DB.getBurners(), this);
 	}
 	
 	public void closeBurnWindow() {
 		for (int i = 0; i < buttons.size(); i++) {
-			JButton button = (JButton) buttons.get(i);
+			JButton button = buttons.get(i);
 			button.setBackground(Color.WHITE);
 			button.setEnabled(true);
 		}

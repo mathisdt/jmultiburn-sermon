@@ -1,16 +1,32 @@
 package org.zephyrsoft.jmultiburn.sermon.model;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
- * Represents a sermon line.
+ * Represents a sermon.
  */
-public class Sermon {
+public class Sermon implements Iterable<SermonPart> {
 	
+	private List<SermonPart> parts = new LinkedList<>();
 	private String date;
 	private String name;
 	private SourceType sourceType;
-	private String source;
-	private int parts;
+	
+	public boolean addPart(SermonPart part) {
+		part.setSermon(this);
+		return parts.add(part);
+	}
+	
+	public int getPartCount() {
+		return parts.size();
+	}
+	
+	@Override
+	public Iterator<SermonPart> iterator() {
+		return parts.iterator();
+	}
 	
 	public String getDate() {
 		return date;
@@ -22,14 +38,6 @@ public class Sermon {
 	
 	public SourceType getSourceType() {
 		return sourceType;
-	}
-	
-	public String getSource() {
-		return source;
-	}
-	
-	public int getParts() {
-		return parts;
 	}
 	
 	public void setDate(String date) {
@@ -44,12 +52,42 @@ public class Sermon {
 		this.sourceType = sourceType;
 	}
 	
-	public void setSource(String source) {
-		this.source = source;
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((date == null) ? 0 : date.hashCode());
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		return result;
 	}
 	
-	public void setParts(int parts) {
-		this.parts = parts;
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		Sermon other = (Sermon) obj;
+		if (date == null) {
+			if (other.date != null) {
+				return false;
+			}
+		} else if (!date.equals(other.date)) {
+			return false;
+		}
+		if (name == null) {
+			if (other.name != null) {
+				return false;
+			}
+		} else if (!name.equals(other.name)) {
+			return false;
+		}
+		return true;
 	}
 	
 }

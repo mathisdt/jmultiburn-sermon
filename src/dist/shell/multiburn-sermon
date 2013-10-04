@@ -334,8 +334,6 @@ audioDirPrep()
       # True, if the file is already CD format
       if file -L "$GO" | grep RIFF | grep PCM | grep "16 bit" | grep stereo | grep 44100 &> /dev/null
           then
-          echo "$GO added."
-          echo ""
           if [ x$PREGAP == "x" ]
               then
               echo "TRACK AUDIO AUDIOFILE "\""$GO"\"" 0" >> .multiburn/multiburn.toc
@@ -382,17 +380,17 @@ audioDirPrep()
         exit 1
     fi
     # Tell the user what's going on (order of tracks and total disc time)
-    echo "*************************************************"
-    echo "The tracks will be burned in the following order:"
-    for ((IND=1; IND <= FILECOUNT ; IND++))
-      do
-      if ! [ x"${TRACKLIST[$IND]}" == "x" ]
-          then
-          echo ${TRACKLIST[$IND]}
-      fi
-    done
-    echo "The disc will be "$(cdrdao show-toc .multiburn/multiburn.toc 2> /dev/null | grep END | tail -n 1 | awk '{ print $2 }' | cut -d '(' -f 1)" (mm:ss:ff)"
-    echo "*************************************************"
+#    echo "*************************************************"
+#    echo "The tracks will be burned in the following order:"
+#    for ((IND=1; IND <= FILECOUNT ; IND++))
+#      do
+#      if ! [ x"${TRACKLIST[$IND]}" == "x" ]
+#          then
+#          echo ${TRACKLIST[$IND]}
+#      fi
+#    done
+    echo "Die Länge der CD wird "$(cdrdao show-toc .multiburn/multiburn.toc 2> /dev/null | grep END | tail -n 1 | awk '{ print $2 }' | cut -d '(' -f 1 |sed -e "s/:[[:digit:]]*$//")" (min:sec) sein."
+#    echo "*************************************************"
     SOURCE=.multiburn/multiburn.toc
     TYPE=cdrdao
     PART=0

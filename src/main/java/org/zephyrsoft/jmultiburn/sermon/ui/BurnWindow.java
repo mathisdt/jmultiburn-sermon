@@ -3,8 +3,8 @@ package org.zephyrsoft.jmultiburn.sermon.ui;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -20,16 +20,16 @@ import javax.swing.JTextArea;
 import org.zephyrsoft.jmultiburn.sermon.BurnMonitor;
 import org.zephyrsoft.jmultiburn.sermon.DB;
 import org.zephyrsoft.jmultiburn.sermon.model.MultiBurnCommand;
-import org.zephyrsoft.jmultiburn.sermon.model.SourceType;
+import org.zephyrsoft.jmultiburn.sermon.model.SermonPart;
 
-public class BurnWindow extends JFrame implements ActionListener {
+public class BurnWindow extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private JScrollPane burnDispScrl;
 	private JTextArea burnDisplay;
 	private boolean userQuit;
 	private MainWindow parent = null;
 	
-	public BurnWindow(SourceType sourceType, String source, String part, String[] burnDevices, MainWindow parent) {
+	public BurnWindow(SermonPart sermonPart, String[] burnDevices, MainWindow parent) {
 		this.parent = parent;
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		this.addWindowListener(new WindowAdapter() {
@@ -56,8 +56,12 @@ public class BurnWindow extends JFrame implements ActionListener {
 		burnDisplay.setFont(new Font("Monospaced", 0, burnDisplayFont.getSize()));
 		burnDisplay.setEditable(false);
 		JButton closeButton = new JButton("Schließen");
-		closeButton.setActionCommand("quit");
-		closeButton.addActionListener(this);
+		closeButton.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				exit();
+			}
+		});
 		JLabel messagesLabel = new JLabel("Meldungen:");
 		boxNorth.add(messagesLabel);
 		boxNorth.setBorder(BorderFactory.createEmptyBorder(5, 10, 0, 5));
@@ -70,12 +74,14 @@ public class BurnWindow extends JFrame implements ActionListener {
 		setSize(getSize().width + 20, getSize().height + 30);
 		setResizable(false);
 		MultiBurnCommand command;
-		switch (sourceType) {
+		switch (sermonPart.getSermon().getSourceType()) {
 			case SINGLE_FILE:
-				command = MultiBurnCommand.forBurnSingleFile(source, part, burnDevices);
+				command =
+					MultiBurnCommand.forBurnSingleFile(sermonPart.getSource(), String.valueOf(sermonPart.getIndex()),
+						burnDevices);
 				break;
 			case DIRECTORY:
-				command = MultiBurnCommand.forBurnDirectory(source, burnDevices);
+				command = MultiBurnCommand.forBurnDirectory(sermonPart.getSource(), burnDevices);
 				break;
 			default:
 				throw new IllegalArgumentException("unknown source type");
@@ -107,14 +113,7 @@ public class BurnWindow extends JFrame implements ActionListener {
 		return userQuit;
 	}
 	
-	@Override
-	public void actionPerformed(ActionEvent a1) {
-		if (a1.getActionCommand().equals("quit")) {
-			exit();
-		}
-	}
-	
-	protected void exit() {
+	private void exit() {
 		Object[] options = {"Ja, wirklich!", "Nein, lieber doch nicht..."};
 		int answer =
 			JOptionPane
