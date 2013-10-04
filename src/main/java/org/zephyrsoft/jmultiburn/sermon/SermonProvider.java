@@ -2,8 +2,10 @@ package org.zephyrsoft.jmultiburn.sermon;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import com.google.common.annotations.VisibleForTesting;
@@ -27,6 +29,15 @@ public class SermonProvider {
 	protected static final Pattern DIRECTORY_PATTERN =
 		Pattern
 			.compile("^(?<year>\\d{4})-(?<month>\\d{2})-(?<day>\\d{2})-(?<name>[^-]+)(?:-(?<speaker>[^-]+))?-(?<part>\\d{1,2})$");
+	
+	private static final Map<String, String> replacements = new HashMap<String, String>();
+	
+	static {
+		replacements.put("_", " ");
+		replacements.put("fruehstueck", "frühstück");
+		replacements.put("Maenner", "Männer");
+		replacements.put("Joerg", "Jörg");
+	}
 	
 	public static List<Sermon> readSermons() {
 		List<Sermon> result = new LinkedList<>();
@@ -60,10 +71,9 @@ public class SermonProvider {
 							composedName = name + " (" + speaker + ")";
 						}
 						
-						// TODO use a map for replacements
-						composedName =
-							composedName.replaceAll("_", " ").replaceAll("fruehstueck", "frühstück")
-								.replaceAll("Maenner", "Männer").replaceAll("Joerg", "Jörg");
+						for (String toReplace : replacements.keySet()) {
+							composedName = composedName.replaceAll(toReplace, replacements.get(toReplace));
+						}
 						
 						Sermon sermon = new Sermon();
 						sermon.setDate(date);
@@ -107,10 +117,9 @@ public class SermonProvider {
 							composedName = name + " (" + speaker + ")";
 						}
 						
-						// TODO use a map for replacements
-						composedName =
-							composedName.replaceAll("_", " ").replaceAll("fruehstueck", "frühstück")
-								.replaceAll("Maenner", "Männer").replaceAll("Joerg", "Jörg");
+						for (String toReplace : replacements.keySet()) {
+							composedName = composedName.replaceAll(toReplace, replacements.get(toReplace));
+						}
 						
 						Sermon sermon = new Sermon();
 						sermon.setDate(date);
