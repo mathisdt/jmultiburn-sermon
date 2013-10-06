@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.zephyrsoft.jmultiburn.sermon.model.Sermon;
 import org.zephyrsoft.jmultiburn.sermon.model.SermonPart;
@@ -18,6 +20,8 @@ import org.zephyrsoft.jmultiburn.sermon.model.SourceType;
  * Provides the list of sermons which are available for burning.
  */
 public class SermonProvider {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(SermonProvider.class);
 	
 	@Autowired
 	private PropertyHolder propertyHolder;
@@ -46,7 +50,9 @@ public class SermonProvider {
 	public List<Sermon> readSermons() {
 		List<Sermon> result = new LinkedList<>();
 		
-		File dir = new File(propertyHolder.getProperty(PropertyNames.SERMON_DIR));
+		String pathname = propertyHolder.getProperty(PropertyNames.SERMON_DIR);
+		LOG.info("reading sermons from {}", pathname);
+		File dir = new File(pathname);
 		File[] files = dir.listFiles();
 		
 		if (files != null) {

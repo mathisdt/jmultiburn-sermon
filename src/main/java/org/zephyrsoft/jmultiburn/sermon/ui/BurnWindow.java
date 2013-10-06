@@ -18,12 +18,17 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zephyrsoft.jmultiburn.sermon.BurnMonitor;
 import org.zephyrsoft.jmultiburn.sermon.model.MultiBurnCommand;
 import org.zephyrsoft.jmultiburn.sermon.model.SermonPart;
 
 public class BurnWindow extends JFrame {
 	private static final long serialVersionUID = 1L;
+	
+	private static final Logger LOG = LoggerFactory.getLogger(BurnWindow.class);
+	
 	private JScrollPane burnDispScrl;
 	private JTextArea burnDisplay;
 	private boolean userQuit;
@@ -104,6 +109,7 @@ public class BurnWindow extends JFrame {
 				// temporäres Verzeichnis ist kaputt, also lieber das aktuelle Verzeichnis nehmen
 				tempDir = null;
 			}
+			LOG.info("running {}", command.toString());
 			multiburnProcess = Runtime.getRuntime().exec(command.toArray(), null, tempDir);
 			burnMonitor = new BurnMonitor(burnDisplay, burnDispScrl, multiburnProcess);
 			setVisible(true);

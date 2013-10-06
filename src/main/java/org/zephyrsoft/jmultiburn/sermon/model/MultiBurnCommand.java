@@ -3,6 +3,7 @@ package org.zephyrsoft.jmultiburn.sermon.model;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
+import com.google.common.base.Joiner;
 
 /**
  * holds a system call related multiburn including its parameters
@@ -62,5 +63,11 @@ public class MultiBurnCommand {
 		ret.add("-9");
 		ret.add(getMultiburnPath(baseDir));
 		return ret;
+	}
+	
+	@Override
+	public String toString() {
+		Joiner joiner = Joiner.on(" ").skipNulls();
+		return joiner.join(parts);
 	}
 }
