@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import com.google.common.annotations.VisibleForTesting;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.zephyrsoft.jmultiburn.sermon.model.Sermon;
 import org.zephyrsoft.jmultiburn.sermon.model.SermonPart;
 import org.zephyrsoft.jmultiburn.sermon.model.SourceType;
@@ -17,6 +18,9 @@ import org.zephyrsoft.jmultiburn.sermon.model.SourceType;
  * Provides the list of sermons which are available for burning.
  */
 public class SermonProvider {
+	
+	@Autowired
+	private PropertyHolder propertyHolder;
 	
 	/** expected pattern for sermons stored as MP3 files */
 	@VisibleForTesting
@@ -39,10 +43,10 @@ public class SermonProvider {
 		replacements.put("Joerg", "Jörg");
 	}
 	
-	public static List<Sermon> readSermons() {
+	public List<Sermon> readSermons() {
 		List<Sermon> result = new LinkedList<>();
 		
-		File dir = new File(DB.getSermonsDir());
+		File dir = new File(propertyHolder.getProperty(PropertyNames.SERMON_DIR));
 		File[] files = dir.listFiles();
 		
 		if (files != null) {

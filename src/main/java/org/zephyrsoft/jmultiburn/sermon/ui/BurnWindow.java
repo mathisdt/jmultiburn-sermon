@@ -9,6 +9,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
@@ -18,7 +19,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import org.zephyrsoft.jmultiburn.sermon.BurnMonitor;
-import org.zephyrsoft.jmultiburn.sermon.DB;
 import org.zephyrsoft.jmultiburn.sermon.model.MultiBurnCommand;
 import org.zephyrsoft.jmultiburn.sermon.model.SermonPart;
 
@@ -28,8 +28,12 @@ public class BurnWindow extends JFrame {
 	private JTextArea burnDisplay;
 	private boolean userQuit;
 	private MainWindow parent = null;
+	private String baseDir = null;
+	private String tempDirPath;
 	
-	public BurnWindow(SermonPart sermonPart, String[] burnDevices, MainWindow parent) {
+	public BurnWindow(SermonPart sermonPart, List<String> burnDevices, String baseDir, String tempDir, MainWindow parent) {
+		this.baseDir = baseDir;
+		this.tempDirPath = tempDir;
 		this.parent = parent;
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		this.addWindowListener(new WindowAdapter() {
@@ -78,10 +82,10 @@ public class BurnWindow extends JFrame {
 			case SINGLE_FILE:
 				command =
 					MultiBurnCommand.forBurnSingleFile(sermonPart.getSource(), String.valueOf(sermonPart.getIndex()),
-						burnDevices);
+						burnDevices, baseDir);
 				break;
 			case DIRECTORY:
-				command = MultiBurnCommand.forBurnDirectory(sermonPart.getSource(), burnDevices);
+				command = MultiBurnCommand.forBurnDirectory(sermonPart.getSource(), burnDevices, baseDir);
 				break;
 			default:
 				throw new IllegalArgumentException("unknown source type");
@@ -95,7 +99,7 @@ public class BurnWindow extends JFrame {
 	
 	private void runMultiburn(MultiBurnCommand command) {
 		try {
-			tempDir = new File(DB.getTempDir());
+			tempDir = new File(tempDirPath);
 			if (!tempDir.exists() || !tempDir.canWrite()) {
 				// temporäres Verzeichnis ist kaputt, also lieber das aktuelle Verzeichnis nehmen
 				tempDir = null;
@@ -127,7 +131,7 @@ public class BurnWindow extends JFrame {
 				// ursprünglichen Prozess zerstören
 				multiburnProcess.destroy();
 				// alle Forks zerstören, die der Prozess selbst initiiert hat
-				Runtime.getRuntime().exec(MultiBurnCommand.forKillMultiBurn().toArray());
+				Runtime.getRuntime().exec(MultiBurnCommand.forKillMultiBurn(baseDir).toArray());
 				// die temporären Dateien löschen, sonst läuft die Platte voll
 				Runtime.getRuntime().exec(
 					"rm -rf " + (tempDir == null ? "" : tempDir.getAbsolutePath() + File.separator) + ".multiburn");

@@ -3,15 +3,11 @@ package org.zephyrsoft.jmultiburn.sermon.model;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
-import org.zephyrsoft.jmultiburn.sermon.DB;
 
 /**
  * holds a system call related multiburn including its parameters
  */
 public class MultiBurnCommand {
-	
-	private static final String MULTIBURN_PATH = DB.getBaseDir() + File.separator + "shell" + File.separator
-		+ "multiburn-sermon";
 	
 	private List<String> parts = new LinkedList<>();
 	
@@ -27,9 +23,14 @@ public class MultiBurnCommand {
 		return parts.toArray(new String[parts.size()]);
 	}
 	
-	public static MultiBurnCommand forBurnSingleFile(String fileToBurn, String part, String[] burnDevices) {
+	private static String getMultiburnPath(String baseDir) {
+		return baseDir + File.separator + "shell" + File.separator + "multiburn-sermon";
+	}
+	
+	public static MultiBurnCommand forBurnSingleFile(String fileToBurn, String part, List<String> burnDevices,
+		String baseDir) {
 		MultiBurnCommand ret = new MultiBurnCommand();
-		ret.add(MULTIBURN_PATH);
+		ret.add(getMultiburnPath(baseDir));
 		ret.add("-s");
 		ret.add(fileToBurn);
 		if (part != null) {
@@ -43,9 +44,9 @@ public class MultiBurnCommand {
 		return ret;
 	}
 	
-	public static MultiBurnCommand forBurnDirectory(String directoryToBurn, String[] burnDevices) {
+	public static MultiBurnCommand forBurnDirectory(String directoryToBurn, List<String> burnDevices, String baseDir) {
 		MultiBurnCommand ret = new MultiBurnCommand();
-		ret.add(MULTIBURN_PATH);
+		ret.add(getMultiburnPath(baseDir));
 		ret.add("-a");
 		ret.add(directoryToBurn);
 		ret.add("0");
@@ -55,11 +56,11 @@ public class MultiBurnCommand {
 		return ret;
 	}
 	
-	public static MultiBurnCommand forKillMultiBurn() {
+	public static MultiBurnCommand forKillMultiBurn(String baseDir) {
 		MultiBurnCommand ret = new MultiBurnCommand();
 		ret.add("killall");
 		ret.add("-9");
-		ret.add(MULTIBURN_PATH);
+		ret.add(getMultiburnPath(baseDir));
 		return ret;
 	}
 }

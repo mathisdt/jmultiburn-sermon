@@ -21,7 +21,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SpringLayout;
-import org.zephyrsoft.jmultiburn.sermon.DB;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.zephyrsoft.jmultiburn.sermon.PropertyHolder;
+import org.zephyrsoft.jmultiburn.sermon.PropertyNames;
 import org.zephyrsoft.jmultiburn.sermon.SermonProvider;
 import org.zephyrsoft.jmultiburn.sermon.model.Sermon;
 import org.zephyrsoft.jmultiburn.sermon.model.SermonPart;
@@ -34,6 +36,12 @@ public class MainWindow extends JFrame {
 	public static int CD_LENGTH = 78;
 	
 	private static String SEPARATOR = "|";
+	
+	@Autowired
+	private PropertyHolder propertyHolder;
+	
+	@Autowired
+	private SermonProvider sermonProvider;
 	
 	private JPanel liste = null;
 	private List<JButton> buttons = null;
@@ -49,10 +57,16 @@ public class MainWindow extends JFrame {
 				exit();
 			}
 		});
-		
-		List<Sermon> sermons = SermonProvider.readSermons();
 		liste = new JPanel(new SpringLayout());
 		buttons = new LinkedList<JButton>();
+		
+		JScrollPane scroller = new JScrollPane(liste);
+		scroller.getVerticalScrollBar().setUnitIncrement(20);
+		setContentPane(scroller);
+	}
+	
+	public void init() {
+		List<Sermon> sermons = sermonProvider.readSermons();
 		
 		if (sermons == null || sermons.size() == 0) {
 			liste.add(new JLabel("Keine MP3s zum Brennen vorhanden!"));
@@ -113,9 +127,7 @@ public class MainWindow extends JFrame {
 				0, 0, // initialX, initialY
 				0, 0);// xPad, yPad
 		}
-		JScrollPane scroller = new JScrollPane(liste);
-		scroller.getVerticalScrollBar().setUnitIncrement(20);
-		setContentPane(scroller);
+		
 		pack();
 		setSize(new Dimension(924, 668));
 		setLocation(new Point(50, 50));
@@ -141,7 +153,10 @@ public class MainWindow extends JFrame {
 			button.setEnabled(false);
 		}
 		// jetzt Brennfenster öffnen
-		burnWindow = new BurnWindow(sermonPart, DB.getBurners(), this);
+		List<String> burners = propertyHolder.getPropertyListWithPrefix(PropertyNames.BURNER_PREFIX);
+		burnWindow =
+			new BurnWindow(sermonPart, burners, propertyHolder.getProperty(PropertyNames.BASE_DIR),
+				propertyHolder.getProperty(PropertyNames.TEMP_DIR), this);
 	}
 	
 	public void closeBurnWindow() {
