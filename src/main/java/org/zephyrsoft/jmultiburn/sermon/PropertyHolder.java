@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Pattern;
+import com.google.common.base.Splitter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,12 +26,21 @@ public class PropertyHolder {
 	private String userPropertiesPath;
 	
 	public void init() throws IOException {
+		logValues("current settings:");
 		File userPropertiesFile = new File(userPropertiesPath);
 		if (userPropertiesFile.exists() && userPropertiesFile.canRead()) {
 			LOG.info("loading user settings");
 			properties.load(new FileReader(userPropertiesFile));
+			logValues("result after merging user settings:");
 		} else {
 			LOG.info("no user settings found");
+		}
+	}
+	
+	private void logValues(String title) {
+		LOG.debug(title);
+		for (Setting setting : Setting.values()) {
+			LOG.debug("   {} = {}", setting.getKey(), properties.getProperty(setting.getKey()));
 		}
 	}
 	
@@ -42,16 +53,12 @@ public class PropertyHolder {
 		return result;
 	}
 	
-	public List<String> getPropertyListWithPrefix(String prefix) {
+	public List<String> getPropertyList(String property) {
 		List<String> result = new LinkedList<>();
-		int i = 1;
-		while (true) {
-			String property = properties.getProperty(prefix + i++);
-			if (property != null) {
-				result.add(property);
-			} else {
-				break;
-			}
+		Splitter splitter = Splitter.on(Pattern.compile("[,;:]")).trimResults().omitEmptyStrings();
+		Iterable<String> iterable = splitter.split(getProperty(property));
+		for (String item : iterable) {
+			result.add(item);
 		}
 		return result;
 	}

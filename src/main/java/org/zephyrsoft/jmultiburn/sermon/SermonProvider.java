@@ -1,5 +1,6 @@
 package org.zephyrsoft.jmultiburn.sermon;
 
+import static org.zephyrsoft.jmultiburn.sermon.Setting.SERMON_DIR;
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -50,7 +51,7 @@ public class SermonProvider {
 	public List<Sermon> readSermons() {
 		List<Sermon> result = new LinkedList<>();
 		
-		String pathname = propertyHolder.getProperty(PropertyNames.SERMON_DIR);
+		String pathname = propertyHolder.getProperty(SERMON_DIR.getKey());
 		LOG.info("reading sermons from {}", pathname);
 		File dir = new File(pathname);
 		File[] files = dir.listFiles();

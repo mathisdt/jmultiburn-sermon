@@ -1,5 +1,8 @@
 package org.zephyrsoft.jmultiburn.sermon.ui;
 
+import static org.zephyrsoft.jmultiburn.sermon.Setting.BASE_DIR;
+import static org.zephyrsoft.jmultiburn.sermon.Setting.BURNERS;
+import static org.zephyrsoft.jmultiburn.sermon.Setting.TEMP_DIR;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -23,7 +26,6 @@ import javax.swing.JScrollPane;
 import javax.swing.SpringLayout;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.zephyrsoft.jmultiburn.sermon.PropertyHolder;
-import org.zephyrsoft.jmultiburn.sermon.PropertyNames;
 import org.zephyrsoft.jmultiburn.sermon.SermonProvider;
 import org.zephyrsoft.jmultiburn.sermon.model.Sermon;
 import org.zephyrsoft.jmultiburn.sermon.model.SermonPart;
@@ -153,10 +155,10 @@ public class MainWindow extends JFrame {
 			button.setEnabled(false);
 		}
 		// jetzt Brennfenster öffnen
-		List<String> burners = propertyHolder.getPropertyListWithPrefix(PropertyNames.BURNER_PREFIX);
+		List<String> burners = propertyHolder.getPropertyList(BURNERS.getKey());
 		burnWindow =
-			new BurnWindow(sermonPart, burners, propertyHolder.getProperty(PropertyNames.BASE_DIR),
-				propertyHolder.getProperty(PropertyNames.TEMP_DIR), this);
+			new BurnWindow(sermonPart, burners, propertyHolder.getProperty(BASE_DIR.getKey()),
+				propertyHolder.getProperty(TEMP_DIR.getKey()), this);
 	}
 	
 	public void closeBurnWindow() {
