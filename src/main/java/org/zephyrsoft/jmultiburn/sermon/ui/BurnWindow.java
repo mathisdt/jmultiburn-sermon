@@ -106,7 +106,7 @@ public class BurnWindow extends JFrame {
 		try {
 			tempDir = new File(tempDirPath);
 			if (!tempDir.exists() || !tempDir.canWrite()) {
-				// temporäres Verzeichnis ist kaputt, also lieber das aktuelle Verzeichnis nehmen
+				// temp dir is unusable, so better take current dir
 				tempDir = null;
 			}
 			LOG.info("running {}", command.toString());
@@ -134,11 +134,11 @@ public class BurnWindow extends JFrame {
 		if (answer != JOptionPane.CLOSED_OPTION && answer == 0) {
 			userQuit = true;
 			try {
-				// ursprünglichen Prozess zerstören
+				// destroy main process
 				multiburnProcess.destroy();
-				// alle Forks zerstören, die der Prozess selbst initiiert hat
+				// destroy all forked processes
 				Runtime.getRuntime().exec(MultiBurnCommand.forKillMultiBurn(baseDir).toArray());
-				// die temporären Dateien löschen, sonst läuft die Platte voll
+				// remove temporary files
 				Runtime.getRuntime().exec(
 					"rm -rf " + (tempDir == null ? "" : tempDir.getAbsolutePath() + File.separator) + ".multiburn");
 			} catch (IOException i8) {
