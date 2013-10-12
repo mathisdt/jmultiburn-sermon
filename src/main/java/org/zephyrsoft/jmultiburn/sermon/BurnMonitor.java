@@ -7,9 +7,14 @@ import java.io.InputStreamReader;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zephyrsoft.jmultiburn.sermon.ui.BurnWindow;
 
 public class BurnMonitor implements Runnable {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(BurnMonitor.class);
+	
 	private JTextArea displayArea;
 	private JScrollPane scroller;
 	private Process burnProcess;
@@ -44,7 +49,7 @@ public class BurnMonitor implements Runnable {
 					JOptionPane.ERROR_MESSAGE);
 			}
 		} catch (IOException i2) {
-			System.out.println("Error: An error has ocurred while monitoring multiburn.");
+			LOG.warn("an error ocurred while monitoring multiburn", i2);
 		}
 	}
 }

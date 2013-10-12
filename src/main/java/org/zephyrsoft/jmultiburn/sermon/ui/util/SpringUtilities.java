@@ -4,11 +4,15 @@ import java.awt.Component;
 import java.awt.Container;
 import javax.swing.Spring;
 import javax.swing.SpringLayout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A utility for creating layouts with SpringLayout.
  */
 public class SpringUtilities {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(SpringUtilities.class);
 	
 	/**
 	 * Aligns the first <code>rows</code> * <code>cols</code> components of <code>parent</code> in a grid. Each
@@ -28,7 +32,7 @@ public class SpringUtilities {
 		try {
 			layout = (SpringLayout) parent.getLayout();
 		} catch (ClassCastException exc) {
-			System.err.println("The first argument to makeCompactGrid must use SpringLayout.");
+			LOG.error("the first argument to makeCompactGrid must use SpringLayout");
 			return;
 		}
 		

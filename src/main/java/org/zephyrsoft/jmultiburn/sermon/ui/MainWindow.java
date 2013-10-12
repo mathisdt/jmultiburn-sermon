@@ -56,6 +56,8 @@ public class MainWindow extends JFrame {
 	
 	private BurnWindow burnWindow = null;
 	
+	private int fontSize = 16;
+	
 	public MainWindow() {
 		super("Predigten brennen");
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -74,19 +76,22 @@ public class MainWindow extends JFrame {
 	}
 	
 	public void init() {
+		try {
+			fontSize = Integer.parseInt(propertyHolder.getProperty(FONT_SIZE));
+		} catch (NumberFormatException e) {
+			LOG.warn("could not parse \"{}\" to a number, using default font size {}",
+				propertyHolder.getProperty(FONT_SIZE), fontSize);
+		}
+		readSermons();
+	}
+	
+	public void readSermons() {
 		List<Sermon> sermons = sermonProvider.readSermons();
 		
 		if (sermons == null || sermons.size() == 0) {
 			liste.add(new JLabel("Keine MP3s zum Brennen vorhanden!"));
 		} else {
 			int i = 0;
-			int fontSize = 16;
-			try {
-				fontSize = Integer.parseInt(propertyHolder.getProperty(FONT_SIZE));
-			} catch (NumberFormatException e) {
-				LOG.warn("could not parse \"{}\" to an integer font size, using default font size {}",
-					propertyHolder.getProperty(FONT_SIZE), fontSize);
-			}
 			Font fontNormal = new Font(Font.SANS_SERIF, Font.PLAIN, fontSize);
 			Font fontBold = new Font(Font.SANS_SERIF, Font.BOLD, fontSize);
 			for (Sermon sermon : sermons) {
@@ -101,9 +106,9 @@ public class MainWindow extends JFrame {
 				for (SermonPart part : sermon) {
 					final JButton button;
 					if (sermon.getPartCount() == 1) {
-						button = new JButton("Brennen!");
+						button = new JButton("Brennen");
 					} else {
-						button = new JButton("CD " + part.getIndex());
+						button = new JButton("CD " + part.getIndex() + " brennen");
 					}
 					final SermonPart selectedSermonPart = part;
 					button.addMouseListener(new MouseAdapter() {
@@ -113,7 +118,6 @@ public class MainWindow extends JFrame {
 							startBurning(selectedSermonPart);
 						}
 					});
-					button.setBackground(Color.WHITE);
 					button.setForeground(Color.BLACK);
 					button.setFont(fontNormal);
 					buttons.add(button);
