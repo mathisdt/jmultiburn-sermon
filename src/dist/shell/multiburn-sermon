@@ -24,7 +24,7 @@ VERSION=2.02
 
 
 # This is the burning speed. Change to suit.
-SPEED=40
+SPEED=32
 
 # This is only for the -a (audio directory) burn type.
 # the format is PREGAP=mm:ss:ff
@@ -55,6 +55,7 @@ if [ $TYPE == "check" ]
     OK_AUDIO=true
     NEEDED_BASELINE=""
     NEEDED_DATA=""
+    CREATE_ISO_COMMAND=""
     NEEDED_AUDIO=""
     echo "Looking for utilities..."
     if ! which cdrdao &> /dev/null
@@ -69,17 +70,19 @@ if [ $TYPE == "check" ]
     fi
     if ! which mkisofs &> /dev/null
         then
-        NEEDED_DATA="- mkisofs\n$NEEDED_DATA"
-        OK_DATA=false
+        if ! which genisoimage &> /dev/null
+        	then
+        	NEEDED_DATA="- mkisofs or genisoimage\n$NEEDED_DATA"
+        	OK_DATA=false
+        else
+        	CREATE_ISO_COMMAND="genisoimage"
+        fi
+    else
+    	CREATE_ISO_COMMAND="mkisofs"
     fi
     if ! which mplayer &> /dev/null
         then
         NEEDED_AUDIO="- mplayer\n$NEEDED_AUDIO"
-        OK_AUDIO=false
-    fi
-    if ! which wavsplit &> /dev/null
-        then
-        NEEDED_AUDIO="- wavsplit\n$NEEDED_AUDIO"
         OK_AUDIO=false
     fi
     if ! which sox &> /dev/null
@@ -286,7 +289,7 @@ dataPrep()
         exit 1
     fi
     echo "Creating temporary ISO image."
-    if ! mkisofs -J -r -o .multiburn/multiburn.iso "$SOURCE" &> .multiburn/isofs.log
+    if ! $CREATE_ISO_COMMAND -J -r -o .multiburn/multiburn.iso "$SOURCE" &> .multiburn/isofs.log
         then 
         echo "Could not create temporary ISO image:"
         echo "$PWD/.multiburn/multiburn.iso"

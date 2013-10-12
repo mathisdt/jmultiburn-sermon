@@ -44,16 +44,16 @@ public class PropertyHolder {
 		}
 	}
 	
-	public String getProperty(String property) {
-		String result = properties.getProperty(property);
+	public String getProperty(Setting property) {
+		String result = properties.getProperty(property.getKey());
 		if (result == null) {
 			// try to get from system properties
-			result = System.getProperty(property);
+			result = System.getProperty(property.getKey());
 		}
 		return result;
 	}
 	
-	public List<String> getPropertyList(String property) {
+	public List<String> getPropertyList(Setting property) {
 		List<String> result = new LinkedList<>();
 		Splitter splitter = Splitter.on(Pattern.compile("[,;:]")).trimResults().omitEmptyStrings();
 		Iterable<String> iterable = splitter.split(getProperty(property));

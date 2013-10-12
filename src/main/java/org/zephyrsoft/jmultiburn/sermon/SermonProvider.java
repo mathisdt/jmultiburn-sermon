@@ -51,7 +51,7 @@ public class SermonProvider {
 	public List<Sermon> readSermons() {
 		List<Sermon> result = new LinkedList<>();
 		
-		String pathname = propertyHolder.getProperty(SERMON_DIR.getKey());
+		String pathname = propertyHolder.getProperty(SERMON_DIR);
 		LOG.info("reading sermons from {}", pathname);
 		File dir = new File(pathname);
 		File[] files = dir.listFiles();

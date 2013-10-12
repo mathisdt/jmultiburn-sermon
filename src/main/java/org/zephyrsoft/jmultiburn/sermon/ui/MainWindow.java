@@ -2,6 +2,7 @@ package org.zephyrsoft.jmultiburn.sermon.ui;
 
 import static org.zephyrsoft.jmultiburn.sermon.Setting.BASE_DIR;
 import static org.zephyrsoft.jmultiburn.sermon.Setting.BURNERS;
+import static org.zephyrsoft.jmultiburn.sermon.Setting.FONT_SIZE;
 import static org.zephyrsoft.jmultiburn.sermon.Setting.TEMP_DIR;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -24,6 +25,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SpringLayout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.zephyrsoft.jmultiburn.sermon.PropertyHolder;
 import org.zephyrsoft.jmultiburn.sermon.SermonProvider;
@@ -34,6 +37,8 @@ import org.zephyrsoft.jmultiburn.sermon.ui.util.SpringUtilities;
 public class MainWindow extends JFrame {
 	
 	private static final long serialVersionUID = -4438912327573399733L;
+	
+	private static final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
 	
 	public static int CD_LENGTH = 78;
 	
@@ -47,6 +52,7 @@ public class MainWindow extends JFrame {
 	
 	private JPanel liste = null;
 	private List<JButton> buttons = null;
+	private JButton currentlyActiveButton = null;
 	
 	private BurnWindow burnWindow = null;
 	
@@ -74,12 +80,21 @@ public class MainWindow extends JFrame {
 			liste.add(new JLabel("Keine MP3s zum Brennen vorhanden!"));
 		} else {
 			int i = 0;
+			int fontSize = 16;
+			try {
+				fontSize = Integer.parseInt(propertyHolder.getProperty(FONT_SIZE));
+			} catch (NumberFormatException e) {
+				LOG.warn("could not parse \"{}\" to an integer font size, using default font size {}",
+					propertyHolder.getProperty(FONT_SIZE), fontSize);
+			}
+			Font fontNormal = new Font(Font.SANS_SERIF, Font.PLAIN, fontSize);
+			Font fontBold = new Font(Font.SANS_SERIF, Font.BOLD, fontSize);
 			for (Sermon sermon : sermons) {
 				JLabel datelabel = new JLabel(sermon.getDate());
 				JLabel namelabel = new JLabel(sermon.getName());
-				datelabel.setFont(new Font("sansserif", Font.BOLD, 14));
+				datelabel.setFont(fontBold);
 				datelabel.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
-				namelabel.setFont(new Font("sansserif", Font.BOLD, 14));
+				namelabel.setFont(fontBold);
 				namelabel.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
 				
 				List<JButton> createdButtons = new ArrayList<JButton>();
@@ -94,11 +109,13 @@ public class MainWindow extends JFrame {
 					button.addMouseListener(new MouseAdapter() {
 						@Override
 						public void mouseClicked(MouseEvent e) {
-							startBurning(selectedSermonPart, button);
+							currentlyActiveButton = button;
+							startBurning(selectedSermonPart);
 						}
 					});
 					button.setBackground(Color.WHITE);
 					button.setForeground(Color.BLACK);
+					button.setFont(fontNormal);
 					buttons.add(button);
 					createdButtons.add(button);
 				}
@@ -146,30 +163,36 @@ public class MainWindow extends JFrame {
 		}
 	}
 	
-	private void startBurning(SermonPart sermonPart, JButton clickedButton) {
-		// Buttons setzen
-		for (JButton button : buttons) {
-			if (clickedButton == button) {
-				button.setBackground(Color.green);
-			}
-			button.setEnabled(false);
-		}
+	private void startBurning(SermonPart sermonPart) {
+		handleButtonState();
+		
 		// jetzt Brennfenster öffnen
-		List<String> burners = propertyHolder.getPropertyList(BURNERS.getKey());
+		List<String> burners = propertyHolder.getPropertyList(BURNERS);
 		burnWindow =
-			new BurnWindow(sermonPart, burners, propertyHolder.getProperty(BASE_DIR.getKey()),
-				propertyHolder.getProperty(TEMP_DIR.getKey()), this);
+			new BurnWindow(sermonPart, burners, propertyHolder.getProperty(BASE_DIR),
+				propertyHolder.getProperty(TEMP_DIR), this);
 	}
 	
 	public void closeBurnWindow() {
-		for (int i = 0; i < buttons.size(); i++) {
-			JButton button = buttons.get(i);
-			button.setBackground(Color.WHITE);
-			button.setEnabled(true);
-		}
+		currentlyActiveButton = null;
+		handleButtonState();
+		
 		burnWindow.setVisible(false);
 		burnWindow.dispose();
 		burnWindow = null;
+	}
+	
+	private void handleButtonState() {
+		boolean targetEnabledState = (currentlyActiveButton == null);
+		
+		for (JButton button : buttons) {
+			if (button == currentlyActiveButton) {
+				button.setBackground(Color.GREEN);
+			} else {
+				button.setBackground(Color.WHITE);
+			}
+			button.setEnabled(targetEnabledState);
+		}
 	}
 	
 }
