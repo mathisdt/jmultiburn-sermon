@@ -29,13 +29,13 @@ public class SermonProvider {
 	
 	/** expected pattern for sermons stored as MP3 files */
 	@VisibleForTesting
-	protected static final Pattern FILE_PATTERN =
+	static final Pattern FILE_PATTERN =
 		Pattern
 			.compile("^(?<year>\\d{4})-(?<month>\\d{2})-(?<day>\\d{2})-(?<name>[^-]+)(?:-(?<speaker>[^-]+))?-(?<bitrate>\\d{1,3})kbps\\.mp3$");
 	
 	/** expected pattern for sermons stored in directories */
 	@VisibleForTesting
-	protected static final Pattern DIRECTORY_PATTERN =
+	static final Pattern DIRECTORY_PATTERN =
 		Pattern
 			.compile("^(?<year>\\d{4})-(?<month>\\d{2})-(?<day>\\d{2})-(?<name>[^-]+)(?:-(?<speaker>[^-]+))?-(?<part>\\d{1,2})$");
 	
