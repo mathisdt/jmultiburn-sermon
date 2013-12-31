@@ -5,10 +5,23 @@
 	<groupId>org.zephyrsoft</groupId>
 	<artifactId>jmultiburn-sermon</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	
+	<name>JMultiBurn-Sermon</name>
+	<description>burn MP3 or WAV files to audio CDs (specialized for multiplication of sermon recordings)</description>
+	<url>http://www.zephyrsoft.org</url>
+	
+	<licenses>
+	    <license>
+	        <name>GNU General Public License (GPL), Version 2.0</name>
+	        <url>http://www.gnu.org/licenses/gpl-2.0.html</url>
+	        <distribution>repo</distribution>
+	    </license>
+	</licenses>
 
 	<scm>
-		<connection>scm:svn:https://dev.zephyrsoft.org/svn/jmultiburn-sermon/trunk/</connection>
 		<url>https://dev.zephyrsoft.org/svn/jmultiburn-sermon/trunk/</url>
+		<connection>scm:svn:https://dev.zephyrsoft.org/svn/jmultiburn-sermon/trunk/</connection>
+		<developerConnection>scm:svn:https://dev.zephyrsoft.org/svn/jmultiburn-sermon/trunk/</developerConnection>
 	</scm>
 
 	<properties>
@@ -75,6 +88,14 @@
 		<name>ZephyrSoft</name>
 		<url>http://www.zephyrsoft.org</url>
 	</organization>
+	
+	<developers>
+	    <developer>
+	        <id>mathis</id>
+	        <name>Mathis Dirksen-Thedens</name>
+	        <email>dev@zephyrsoft.org</email>
+	    </developer>
+	</developers>
 
 	<repositories>
 		<repository>
@@ -148,6 +169,24 @@
 							<classpathPrefix>../lib/</classpathPrefix>
 						</manifest>
 					</archive>
+				</configuration>
+			</plugin>
+			
+			<plugin>
+			    <groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>2.1.2</version>
+				<executions>
+				    <execution>
+				        <id>attach-sources</id>
+				        <goals>
+				            <goal>jar</goal>
+				        </goals>
+				    </execution>
+				</executions>
+				<configuration>
+					<outputDirectory>${project.build.directory}/distribution/bin</outputDirectory>
+					<finalName>${project.artifactId}</finalName>
 				</configuration>
 			</plugin>
 
