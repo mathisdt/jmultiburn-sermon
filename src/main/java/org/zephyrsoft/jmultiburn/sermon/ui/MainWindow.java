@@ -4,6 +4,7 @@ import static org.zephyrsoft.jmultiburn.sermon.Setting.BASE_DIR;
 import static org.zephyrsoft.jmultiburn.sermon.Setting.BURNERS;
 import static org.zephyrsoft.jmultiburn.sermon.Setting.FONT_SIZE;
 import static org.zephyrsoft.jmultiburn.sermon.Setting.TEMP_DIR;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -23,12 +24,14 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,8 +94,8 @@ public class MainWindow extends JFrame {
 		try {
 			fontSize = Integer.parseInt(propertyHolder.getProperty(FONT_SIZE));
 		} catch (NumberFormatException e) {
-			LOG.warn("could not parse \"{}\" to a number, using default font size {}",
-				propertyHolder.getProperty(FONT_SIZE), fontSize);
+			LOG.warn("could not parse \"{}\" to a number, using default font size {}", propertyHolder
+				.getProperty(FONT_SIZE), fontSize);
 		}
 		
 		dateConstraints = new GridBagConstraints();
@@ -158,7 +161,7 @@ public class MainWindow extends JFrame {
 						} else {
 							button = new JButton("CD " + part.getIndex() + " brennen");
 						}
-						button.setName(sermon.getName() + "-" + part.getIndex());
+						button.setName(sermon.getDate() + "-" + sermon.getName() + "-" + part.getIndex());
 						final SermonPart selectedSermonPart = part;
 						button.addMouseListener(new MouseAdapter() {
 							@Override
@@ -212,9 +215,8 @@ public class MainWindow extends JFrame {
 		
 		// open burn window
 		List<String> burners = propertyHolder.getPropertyList(BURNERS);
-		burnWindow =
-			new BurnWindow(sermonPart, burners, propertyHolder.getProperty(BASE_DIR),
-				propertyHolder.getProperty(TEMP_DIR), this);
+		burnWindow = new BurnWindow(sermonPart, burners, propertyHolder.getProperty(BASE_DIR), propertyHolder
+			.getProperty(TEMP_DIR), this);
 	}
 	
 	public void closeBurnWindow() {
