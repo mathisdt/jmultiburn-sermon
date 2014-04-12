@@ -85,7 +85,7 @@ if [ $TYPE == "check" ]
         NEEDED_AUDIO="- mplayer\n$NEEDED_AUDIO"
         OK_AUDIO=false
     fi
-    if ! which sox &> /dev/null
+    if ! which  &> /dev/null
         then
         NEEDED_AUDIO="- sox\n$NEEDED_AUDIO"
         OK_AUDIO=false
@@ -207,9 +207,9 @@ singleAudioPrep()
 				echo "done."
 		fi
         # and generate the TOC
-        splitcount=$(ls $splitdir | wc -l)
+        splitcount=$(ls $SPLITDIR | wc -l)
         echo "Audiodatei in $splitcount Tracks zu je 5 Minuten aufgeteilt."
-        for splitfile in $splitdir/*.wav; do
+        for splitfile in $SPLITDIR/*.wav; do
             echo "TRACK AUDIO AUDIOFILE "\""$splitfile"\"" 0" >> .multiburn/multiburn.toc
         done
         echo "$1 added."
@@ -260,9 +260,9 @@ singleAudioPrep()
 					echo "done."
 			fi
             # and generate the TOC
-            splitcount=$(ls $splitdir | wc -l)
+            splitcount=$(ls $SPLITDIR | wc -l)
             echo "Audiodatei in $splitcount Tracks zu je 5 Minuten aufgeteilt."
-            for splitfile in $splitdir/*.wav; do
+            for splitfile in $SPLITDIR/*.wav; do
                 echo "TRACK AUDIO AUDIOFILE "\""$splitfile"\"" 0" >> .multiburn/multiburn.toc
             done
         else
