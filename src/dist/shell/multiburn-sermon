@@ -187,19 +187,24 @@ singleAudioPrep()
     # Check file to see if it nees re-encoding
     if file -L "$1" | grep RIFF | grep PCM | grep "16 bit" | grep stereo | grep 44100 &> /dev/null
         then
-        # split wave file to five-minute-slices - assume maximum length of two hours
-        wavsplit --seconds "$1" 300 600 900 1200 1500 1800 2100 2400 2700 3000 3300 3600 3900 4200 4500 4800 5100 5400 5700 6000 6300 6600 6900 7200 >/dev/null 2>&1
-        splitdir=$(echo $1 | sed -e 's#\.wav$##')
-        # re-append the last file if it has less than 10 seconds
-        last_file=$(ls $splitdir | tail -n 1)
-        last_file_length=$(sox "$splitdir/$last_file" -n stat 2>&1 | sed -n 's#^Length (seconds):[^0-9]*\([0-9]*\)\..*$#\1#p')
-		if [ $last_file_length -lt 10 ]; then
-			echo "Letzter Track wird wieder angefügt, weil er weniger als 10 Sekunden lang wäre."
-			to_merge_with=$(ls $splitdir | tail -n 2 | head -n 1)
-			merged=$(mktemp XXXXXXXX.wav)
-            sox "$splitdir/$to_merge_with" "$splitdir/$last_file" "$merged" >/dev/null 2>&1 && \
-            rm "$splitdir/$last_file" && \
-            mv "$merged" "$splitdir/$to_merge_with"
+        # split wave file to five-minute-slices
+		SPLITDIR=$(echo $OUTFILE | sed -e 's#\.wav$##')
+		mkdir "$SPLITDIR"
+		SPLITFILES=$SPLITDIR/track-%2n.wav
+		echo -n "Split audio into tracks of 5 minutes each... "
+		sox "$OUTFILE" "$SPLITFILES" trim 0 300 : newfile : restart >/dev/null 2>&1
+		echo "done."
+		# re-append the last file if it has less than 10 seconds
+		LAST_FILE=$(ls "$SPLITDIR" | tail -n 1)
+		LAST_FILE_LENGTH=$(sox "$SPLITDIR/$LAST_FILE" -n stat 2>&1 | sed -n 's#^Length (seconds):[^0-9]*\([0-9]*\)\..*$#\1#p')
+		if [ $LAST_FILE_LENGTH -lt 10 ]; then
+			TO_MERGE_WITH=$(ls "$SPLITDIR" | tail -n 2 | head -n 1)
+			MERGED=$(mktemp XXXXXXXX.wav)
+			echo -n "Re-append last track because it would have less than 10 seconds... "
+			sox "$SPLITDIR/$TO_MERGE_WITH" "$SPLITDIR/$LAST_FILE" "$MERGED" >/dev/null 2>&1 && \
+				rm "$SPLITDIR/$LAST_FILE" && \
+				mv "$MERGED" "$SPLITDIR/$TO_MERGE_WITH" && \
+				echo "done."
 		fi
         # and generate the TOC
         splitcount=$(ls $splitdir | wc -l)
@@ -235,19 +240,25 @@ singleAudioPrep()
         # mplayer doesn't return proper error codes, so need to test output file.
         if file -L "$OUTFILE" | grep RIFF | grep PCM | grep "16 bit" | grep stereo | grep 44100 &> /dev/null
             then
-            # split wave file to five-minute-slices - assume maximum length of two hours
-            wavsplit --seconds "$OUTFILE" 300 600 900 1200 1500 1800 2100 2400 2700 3000 3300 3600 3900 4200 4500 4800 5100 5400 5700 6000 6300 6600 6900 7200 >/dev/null 2>&1
-            splitdir=$(echo $OUTFILE | sed -e 's#\.wav$##')
-            last_file=$(ls $splitdir | tail -n 1)
-            last_file_length=$(sox "$splitdir/$last_file" -n stat 2>&1 | sed -n 's#^Length (seconds):[^0-9]*\([0-9]*\)\..*$#\1#p')
-            if [ $last_file_length -lt 10 ]; then
-            	echo "Letzter Track wird wieder angefügt, weil er weniger als 10 Sekunden lang wäre."
-            	to_merge_with=$(ls $splitdir | tail -n 2 | head -n 1)
-            	merged=$(mktemp XXXXXXXX.wav)
-            	sox "$splitdir/$to_merge_with" "$splitdir/$last_file" "$merged" >/dev/null 2>&1 && \
-            	rm "$splitdir/$last_file" && \
-            	mv "$merged" "$splitdir/$to_merge_with"
-            fi
+            # split wave file to five-minute-slices
+			SPLITDIR=$(echo $OUTFILE | sed -e 's#\.wav$##')
+			mkdir "$SPLITDIR"
+			SPLITFILES=$SPLITDIR/track-%2n.wav
+			echo -n "Split audio into tracks of 5 minutes each... "
+			sox "$OUTFILE" "$SPLITFILES" trim 0 300 : newfile : restart >/dev/null 2>&1
+			echo "done."
+			# re-append the last file if it has less than 10 seconds
+			LAST_FILE=$(ls "$SPLITDIR" | tail -n 1)
+			LAST_FILE_LENGTH=$(sox "$SPLITDIR/$LAST_FILE" -n stat 2>&1 | sed -n 's#^Length (seconds):[^0-9]*\([0-9]*\)\..*$#\1#p')
+			if [ $LAST_FILE_LENGTH -lt 10 ]; then
+				TO_MERGE_WITH=$(ls "$SPLITDIR" | tail -n 2 | head -n 1)
+				MERGED=$(mktemp XXXXXXXX.wav)
+				echo -n "Re-append last track because it would have less than 10 seconds... "
+				sox "$SPLITDIR/$TO_MERGE_WITH" "$SPLITDIR/$LAST_FILE" "$MERGED" >/dev/null 2>&1 && \
+					rm "$SPLITDIR/$LAST_FILE" && \
+					mv "$MERGED" "$SPLITDIR/$TO_MERGE_WITH" && \
+					echo "done."
+			fi
             # and generate the TOC
             splitcount=$(ls $splitdir | wc -l)
             echo "Audiodatei in $splitcount Tracks zu je 5 Minuten aufgeteilt."
