@@ -30,6 +30,7 @@
 		<main.class>org.zephyrsoft.jmultiburn.sermon.Start</main.class>
 		
 		<!-- dependency versions -->
+		<version.spring>4.2.3.RELEASE</version.spring>
 		<version.slf4j>1.7.5</version.slf4j>
 	</properties>
 
@@ -38,7 +39,7 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
-			<version>4.2.2.RELEASE</version>
+			<version>${version.spring}</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>spring-aop</artifactId>
