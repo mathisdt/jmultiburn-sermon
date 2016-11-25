@@ -1,0 +1,33 @@
+sudo: false
+
+language: java
+
+jdk:
+- oraclejdk8
+
+branches:
+  only:
+  - develop
+  - master
+  - "/^v[0-9].*/"
+
+cache:
+  directories:
+  - "$HOME/.m2"
+
+install: true
+
+before_script:
+- export TZ=Europe/Berlin
+
+script: mvn clean verify
+
+deploy:
+  provider: releases
+  api_key:
+    secure: ok+mZtpTOAyQuOr+1zcO4K68tRfMX+s3LaJmhbzFgbtqyMk3lAzK6f62tinX+QLgnKDhRr0IHT1k2cdpdF0u7tUK7lUvlfNNuUYmABzt/nBvejbKldY2TX89lz6l+O4VDXr9FULSSKIsTyyPSv3hQI7CLkyWLAVz22XtaaY0XAaSpaPjbk+RJlgGj5Auv167b65duk3xmuUSll9DxgvypMLzXgYlEv0nB7FzAe3tf6lYpvGHWbounADJDF/hGZAGfquS1TQVbzbxUudHLw6WSF+TJK1ej2XWheBE9Okkf6gBabfQF+LvX6YAbTZYmd40HnV+t9esdWFx86fwfLG1FN1dpRFAJyrZ3N+dD0axukNuEuOOo4iAMYvDZQ6vcoO6HVnY6pCl7fRQca+P8zqRSQQ7lfMqQ+eJfu7hbNI+BFo6llNW5hJtVF7PHYd7rYrqr6aGgUT68F5HXxXm9crK56JqdqjQwqI/keXC4wEG1LHe5IM6RLGO7GK5R663VcDQzG3RRhmg0znW88DtdALZmlYWWJ6ZmEBHG/l9idp8eRMhkf+02ErEj8QTSczb6bqxuCg0jZsu97OAS/yERg2UimtkMu+557oii6DJXoTiL824f2QtozcB5bovQC+aHbm2Ijv1j6SglWwr39pqrlt6/ehzgivCWsYlpocqMLbn7LE=
+  file: "./target/*.zip"
+  file_glob: true
+  skip_cleanup: true
+  on:
+    repo: mathisdt/jmultiburn-sermon
