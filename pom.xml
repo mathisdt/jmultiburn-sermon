@@ -5,11 +5,11 @@
 	<groupId>org.zephyrsoft</groupId>
 	<artifactId>jmultiburn-sermon</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	
+
 	<name>JMultiBurn-Sermon</name>
 	<description>burn MP3 or WAV files to audio CDs (specialized for multiplication of sermon recordings)</description>
 	<url>http://www.zephyrsoft.org</url>
-	
+
 	<licenses>
 	    <license>
 	        <name>GNU General Public License (GPL), Version 2.0</name>
@@ -28,9 +28,9 @@
 		<version.java>1.8</version.java>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<main.class>org.zephyrsoft.jmultiburn.sermon.Start</main.class>
-		
+
 		<!-- dependency versions -->
-		<version.spring>5.1.0.RELEASE</version.spring>
+		<version.spring>5.1.1.RELEASE</version.spring>
 		<version.guava>26.0-jre</version.guava>
 		<version.slf4j>1.7.25</version.slf4j>
 		<version.log4j>2.10.0</version.log4j>
@@ -55,7 +55,7 @@
 			<artifactId>guava</artifactId>
 			<version>${version.guava}</version>
 		</dependency>
-		
+
 		<!-- logging -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -92,7 +92,7 @@
 		<name>ZephyrSoft</name>
 		<url>http://www.zephyrsoft.org</url>
 	</organization>
-	
+
 	<developers>
 	    <developer>
 	        <id>mathis</id>
@@ -177,7 +177,7 @@
 					</execution>
 				</executions>
 			</plugin>
-		
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -223,7 +223,7 @@
 					</archive>
 				</configuration>
 			</plugin>
-			
+
 			<plugin>
 			    <groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
@@ -312,7 +312,7 @@
 
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings 
+				<!--This plugin's configuration is used to store Eclipse m2e settings
 					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
