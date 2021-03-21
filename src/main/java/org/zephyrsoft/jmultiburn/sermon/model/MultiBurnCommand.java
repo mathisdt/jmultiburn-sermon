@@ -1,33 +1,34 @@
 package org.zephyrsoft.jmultiburn.sermon.model;
 
 import java.io.File;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
+
 import com.google.common.base.Joiner;
 
 /**
  * holds a system call related multiburn including its parameters
  */
 public class MultiBurnCommand {
-	
-	private List<String> parts = new LinkedList<>();
-	
+
+	private List<String> parts = new ArrayList<>();
+
 	private MultiBurnCommand() {
 		// only created via static methods
 	}
-	
+
 	public boolean add(String e) {
 		return parts.add(e);
 	}
-	
+
 	public String[] toArray() {
 		return parts.toArray(new String[parts.size()]);
 	}
-	
+
 	private static String getMultiburnPath(String baseDir) {
 		return baseDir + File.separator + "shell" + File.separator + "multiburn-sermon";
 	}
-	
+
 	public static MultiBurnCommand forBurnSingleFile(String fileToBurn, String part, List<String> burnDevices,
 		String baseDir) {
 		MultiBurnCommand ret = new MultiBurnCommand();
@@ -44,7 +45,7 @@ public class MultiBurnCommand {
 		}
 		return ret;
 	}
-	
+
 	public static MultiBurnCommand forBurnDirectory(String directoryToBurn, List<String> burnDevices, String baseDir) {
 		MultiBurnCommand ret = new MultiBurnCommand();
 		ret.add(getMultiburnPath(baseDir));
@@ -56,7 +57,7 @@ public class MultiBurnCommand {
 		}
 		return ret;
 	}
-	
+
 	public static MultiBurnCommand forKillMultiBurn(String baseDir) {
 		MultiBurnCommand ret = new MultiBurnCommand();
 		ret.add("killall");
@@ -64,7 +65,7 @@ public class MultiBurnCommand {
 		ret.add(getMultiburnPath(baseDir));
 		return ret;
 	}
-	
+
 	@Override
 	public String toString() {
 		Joiner joiner = Joiner.on(" ").skipNulls();

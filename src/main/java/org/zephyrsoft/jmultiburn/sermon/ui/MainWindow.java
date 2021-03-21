@@ -19,7 +19,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -41,38 +40,38 @@ import org.zephyrsoft.jmultiburn.sermon.model.Sermon;
 import org.zephyrsoft.jmultiburn.sermon.model.SermonPart;
 
 public class MainWindow extends JFrame {
-	
+
 	private static final long serialVersionUID = -4438912327573399733L;
-	
+
 	private static final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
-	
+
 	public static int CD_LENGTH = 78;
-	
+
 	private static String SEPARATOR = "|";
-	
+
 	@Autowired
 	private PropertyHolder propertyHolder;
-	
+
 	@Autowired
 	private SermonProvider sermonProvider;
-	
+
 	private final Object LOCK = new Object();
-	
+
 	private JPanel liste = null;
 	private List<JButton> buttons = null;
 	private String currentlyActiveButtonName = null;
-	
+
 	private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-	
+
 	private BurnWindow burnWindow = null;
-	
+
 	private int fontSize = 16;
-	
+
 	private GridBagConstraints dateConstraints;
 	private GridBagConstraints nameConstraints;
 	private GridBagConstraints buttonsConstraints;
 	private GridBagConstraints backgroundConstraints;
-	
+
 	public MainWindow() {
 		super("Predigten brennen");
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -83,13 +82,13 @@ public class MainWindow extends JFrame {
 			}
 		});
 		liste = new JPanel(new GridBagLayout());
-		buttons = new LinkedList<JButton>();
-		
+		buttons = new ArrayList<JButton>();
+
 		JScrollPane scroller = new JScrollPane(liste);
 		scroller.getVerticalScrollBar().setUnitIncrement(20);
 		setContentPane(scroller);
 	}
-	
+
 	public void init() {
 		try {
 			fontSize = Integer.parseInt(propertyHolder.getProperty(FONT_SIZE));
@@ -97,28 +96,28 @@ public class MainWindow extends JFrame {
 			LOG.warn("could not parse \"{}\" to a number, using default font size {}", propertyHolder
 				.getProperty(FONT_SIZE), fontSize);
 		}
-		
+
 		dateConstraints = new GridBagConstraints();
 		dateConstraints.gridx = 0;
 		dateConstraints.fill = GridBagConstraints.BOTH;
-		
+
 		nameConstraints = new GridBagConstraints();
 		nameConstraints.gridx = 1;
 		nameConstraints.fill = GridBagConstraints.BOTH;
-		
+
 		buttonsConstraints = new GridBagConstraints();
 		buttonsConstraints.gridx = 2;
 		buttonsConstraints.fill = GridBagConstraints.BOTH;
-		
+
 		setSize(new Dimension(924, 668));
 		setLocation(new Point(50, 50));
 		setExtendedState(Frame.MAXIMIZED_BOTH);
 		setVisible(true);
-		
+
 		// start refreshing periodically
 		executor.scheduleAtFixedRate(createRunnable(), 0, 60, TimeUnit.SECONDS);
 	}
-	
+
 	private Runnable createRunnable() {
 		return new Runnable() {
 			@Override
@@ -127,14 +126,14 @@ public class MainWindow extends JFrame {
 			}
 		};
 	}
-	
+
 	public void readSermons() {
 		synchronized (LOCK) {
 			liste.removeAll();
 			buttons.clear();
-			
+
 			List<Sermon> sermons = sermonProvider.readSermons();
-			
+
 			if (sermons == null || sermons.size() == 0) {
 				liste.add(new JLabel("Keine MP3s zum Brennen vorhanden!"));
 			} else {
@@ -152,7 +151,7 @@ public class MainWindow extends JFrame {
 					nameLabel.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
 					JPanel namePanel = new JPanel(new BorderLayout());
 					namePanel.add(nameLabel, BorderLayout.LINE_START);
-					
+
 					List<JButton> createdButtons = new ArrayList<JButton>();
 					for (SermonPart part : sermon) {
 						final JButton button;
@@ -175,7 +174,7 @@ public class MainWindow extends JFrame {
 						buttons.add(button);
 						createdButtons.add(button);
 					}
-					
+
 					// add elements
 					liste.add(datePanel, dateConstraints);
 					liste.add(namePanel, nameConstraints);
@@ -184,7 +183,7 @@ public class MainWindow extends JFrame {
 						buttonPanel.add(button);
 					}
 					liste.add(buttonPanel, buttonsConstraints);
-					
+
 					if (rowNumber % 2 == 1) {
 						datePanel.setBackground(Color.lightGray);
 						datePanel.setOpaque(true);
@@ -196,42 +195,42 @@ public class MainWindow extends JFrame {
 					rowNumber++;
 				}
 			}
-			
+
 			handleButtonState();
 			revalidate();
 			liste.scrollRectToVisible(new Rectangle(0, ((int) liste.getSize().getHeight()) - 1, 1, 1));
 		}
 	}
-	
+
 	protected void exit() {
 		// make sure it's safe to exit
 		if (burnWindow == null) {
 			System.exit(0);
 		}
 	}
-	
+
 	private void startBurning(SermonPart sermonPart) {
 		handleButtonState();
-		
+
 		// open burn window
 		List<String> burners = propertyHolder.getPropertyList(BURNERS);
 		burnWindow = new BurnWindow(sermonPart, burners, propertyHolder.getProperty(BASE_DIR), propertyHolder
 			.getProperty(TEMP_DIR), this);
 	}
-	
+
 	public void closeBurnWindow() {
 		currentlyActiveButtonName = null;
 		handleButtonState();
-		
+
 		burnWindow.setVisible(false);
 		burnWindow.dispose();
 		burnWindow = null;
 	}
-	
+
 	private void handleButtonState() {
 		synchronized (LOCK) {
 			boolean targetEnabledState = (currentlyActiveButtonName == null);
-			
+
 			for (JButton button : buttons) {
 				if (button.getName().equals(currentlyActiveButtonName)) {
 					button.setBackground(Color.GREEN);
@@ -242,5 +241,5 @@ public class MainWindow extends JFrame {
 			}
 		}
 	}
-	
+
 }

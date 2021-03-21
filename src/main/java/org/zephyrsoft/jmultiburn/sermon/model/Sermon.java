@@ -1,57 +1,57 @@
 package org.zephyrsoft.jmultiburn.sermon.model;
 
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
  * Represents a sermon.
  */
 public class Sermon implements Iterable<SermonPart> {
-	
-	private List<SermonPart> parts = new LinkedList<>();
+
+	private List<SermonPart> parts = new ArrayList<>();
 	private String date;
 	private String name;
 	private SourceType sourceType;
-	
+
 	public boolean addPart(SermonPart part) {
 		part.setSermon(this);
 		return parts.add(part);
 	}
-	
+
 	public int getPartCount() {
 		return parts.size();
 	}
-	
+
 	@Override
 	public Iterator<SermonPart> iterator() {
 		return parts.iterator();
 	}
-	
+
 	public String getDate() {
 		return date;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
-	
+
 	public SourceType getSourceType() {
 		return sourceType;
 	}
-	
+
 	public void setDate(String date) {
 		this.date = date;
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	public void setSourceType(SourceType sourceType) {
 		this.sourceType = sourceType;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -60,7 +60,7 @@ public class Sermon implements Iterable<SermonPart> {
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		return result;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -89,5 +89,5 @@ public class Sermon implements Iterable<SermonPart> {
 		}
 		return true;
 	}
-	
+
 }
