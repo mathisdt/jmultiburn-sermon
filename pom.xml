@@ -29,7 +29,7 @@
 		<main.class>org.zephyrsoft.jmultiburn.sermon.Start</main.class>
 
 		<!-- dependency versions -->
-		<version.spring>5.3.9</version.spring>
+		<version.spring>5.3.10</version.spring>
 		<version.guava>30.1.1-jre</version.guava>
 		<version.slf4j>1.7.32</version.slf4j>
 		<version.logback>1.2.5</version.logback>
