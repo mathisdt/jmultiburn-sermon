@@ -10,6 +10,7 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
@@ -18,6 +19,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.jmultiburn.sermon.BurnMonitor;
@@ -26,24 +28,25 @@ import org.zephyrsoft.jmultiburn.sermon.model.SermonPart;
 
 public class BurnWindow extends JFrame {
 	private static final long serialVersionUID = 1L;
-	
+
 	private static final Logger LOG = LoggerFactory.getLogger(BurnWindow.class);
-	
+
 	private JScrollPane burnDispScrl;
 	private JTextArea burnDisplay;
 	private boolean userQuit;
 	private MainWindow parent = null;
 	private String baseDir = null;
 	private String tempDirPath;
-	
-	public BurnWindow(SermonPart sermonPart, List<String> burnDevices, String baseDir, String tempDir, MainWindow parent) {
+
+	public BurnWindow(final SermonPart sermonPart, final List<String> burnDevices, final String baseDir,
+		final String tempDir, final MainWindow parent) {
 		this.baseDir = baseDir;
 		this.tempDirPath = tempDir;
 		this.parent = parent;
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		this.addWindowListener(new WindowAdapter() {
 			@Override
-			public void windowClosing(WindowEvent e) {
+			public void windowClosing(final WindowEvent e) {
 				exit();
 			}
 		});
@@ -59,15 +62,15 @@ public class BurnWindow extends JFrame {
 		contentPane.add(boxSouth, BorderLayout.SOUTH);
 		burnDisplay = new JTextArea(24, 80);
 		burnDisplay.setBorder(BorderFactory.createEmptyBorder(2, 5, 15, 0));
-		burnDispScrl =
-			new JScrollPane(burnDisplay, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		burnDispScrl = new JScrollPane(burnDisplay, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+			JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		Font burnDisplayFont = burnDisplay.getFont();
 		burnDisplay.setFont(new Font("Monospaced", 0, burnDisplayFont.getSize()));
 		burnDisplay.setEditable(false);
 		JButton closeButton = new JButton("Schließen");
 		closeButton.addMouseListener(new MouseAdapter() {
 			@Override
-			public void mouseClicked(MouseEvent e) {
+			public void mouseClicked(final MouseEvent e) {
 				exit();
 			}
 		});
@@ -82,27 +85,21 @@ public class BurnWindow extends JFrame {
 		pack();
 		setSize(getSize().width + 20, getSize().height + 30);
 		setResizable(false);
-		MultiBurnCommand command;
-		switch (sermonPart.getSermon().getSourceType()) {
-			case SINGLE_FILE:
-				command =
-					MultiBurnCommand.forBurnSingleFile(sermonPart.getSource(), String.valueOf(sermonPart.getIndex()),
-						burnDevices, baseDir);
-				break;
-			case DIRECTORY:
-				command = MultiBurnCommand.forBurnDirectory(sermonPart.getSource(), burnDevices, baseDir);
-				break;
-			default:
-				throw new IllegalArgumentException("unknown source type");
-		}
+		MultiBurnCommand command = switch (sermonPart.getSermon().getSourceType()) {
+			case SINGLE_FILE -> MultiBurnCommand.forBurnSingleFile(sermonPart.getSource(),
+				String.valueOf(sermonPart.getIndex()),
+				burnDevices, baseDir);
+			case DIRECTORY -> MultiBurnCommand.forBurnDirectory(sermonPart.getSource(), burnDevices, baseDir);
+			default -> throw new IllegalArgumentException("unknown source type");
+		};
 		runMultiburn(command);
 	}
-	
+
 	private Process multiburnProcess;
 	private File tempDir;
 	private BurnMonitor burnMonitor;
-	
-	private void runMultiburn(MultiBurnCommand command) {
+
+	private void runMultiburn(final MultiBurnCommand command) {
 		try {
 			tempDir = new File(tempDirPath);
 			if (!tempDir.exists() || !tempDir.canWrite()) {
@@ -118,19 +115,18 @@ public class BurnWindow extends JFrame {
 			dispose();
 		}
 	}
-	
+
 	public boolean getUserQuitState() {
 		return userQuit;
 	}
-	
+
 	private void exit() {
-		Object[] options = {"Ja, wirklich!", "Nein, lieber doch nicht..."};
-		int answer =
-			JOptionPane
-				.showOptionDialog(
-					this,
-					"Wirklich das Brenn-Fenster schließen?\n\nJede CD, die gerade gebrannt wird, ist damit unbrauchbar!\n\nJetzt schließen?",
-					"Beenden?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+		Object[] options = { "Ja, wirklich!", "Nein, lieber doch nicht..." };
+		int answer = JOptionPane
+			.showOptionDialog(
+				this,
+				"Wirklich das Brenn-Fenster schließen?\n\nJede CD, die gerade gebrannt wird, ist damit unbrauchbar!\n\nJetzt schließen?",
+				"Beenden?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
 		if (answer != JOptionPane.CLOSED_OPTION && answer == 0) {
 			userQuit = true;
 			try {
