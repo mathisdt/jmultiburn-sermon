@@ -32,7 +32,7 @@
 		<version.spring>5.3.19</version.spring>
 		<version.guava>31.1-jre</version.guava>
 		<version.slf4j>1.7.36</version.slf4j>
-		<version.logback>1.2.10</version.logback>
+		<version.logback>1.2.11</version.logback>
 		<version.junit>4.13.2</version.junit>
 	</properties>
 
@@ -175,7 +175,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.10.0</version>
+				<version>3.10.1</version>
 				<inherited>true</inherited>
 				<configuration>
 					<source>${version.java}</source>
