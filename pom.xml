@@ -31,7 +31,7 @@
 		<!-- dependency versions -->
 		<version.spring>5.3.22</version.spring>
 		<version.guava>31.1-jre</version.guava>
-		<version.slf4j>1.7.36</version.slf4j>
+		<version.slf4j>2.0.0</version.slf4j>
 		<version.logback>1.4.0</version.logback>
 		<version.junit>4.13.2</version.junit>
 	</properties>
